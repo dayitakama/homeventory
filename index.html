@@ -359,7 +359,7 @@
   /* ===================== KONFIGURASI ===================== */
   // Client ID sebaiknya diisi di file config.js. Baris di bawah hanya cadangan.
   const DEFAULT_CLIENT_ID = '';
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.1.1';
   const BACKUP_FILENAME = 'rumahku-backup.json';
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const PHOTO_MAX_SIDE = 1000;     // px, sisi terpanjang foto
@@ -984,12 +984,15 @@
 
   let backupRunning = false;
   async function backupToDrive({ silent = false } = {}) {
-    // Pengaman: HP tanpa barang (misalnya HP baru) tidak boleh menimpa backup lama di Drive
-    if (!items.length) {
-      if (silent) setPending(false);
-      else toast('Belum ada barang di HP ini. Kalau pindah HP, pakai "Pulihkan backup".', 4500);
+    // Pengaman: HP yang belum pernah tersambung ke Drive (misalnya HP baru) dan masih kosong
+    // tidak boleh menimpa backup lama. HP yang pernah backup boleh mengosongkan backup
+    // (artinya pengguna memang menghapus semua barang), dengan konfirmasi kalau manual.
+    const pernahSinkron = store.get('syncedOnce') || store.get('lastBackup');
+    if (!items.length && !pernahSinkron) {
+      if (!silent) toast('Belum ada barang di HP ini. Kalau pindah HP, pakai "Pulihkan backup".', 4500);
       return;
     }
+    if (!items.length && !silent && !confirm('Semua barang di HP ini sudah dihapus.\n\nBackup sekarang akan mengosongkan isi backup di Google Drive juga. Lanjutkan?')) return;
     if (!tokenValid()) {
       if (silent) { setPending(true); return; }
       startAuth('backup');
@@ -1001,6 +1004,7 @@
       if (!silent) toast('Sedang backup ke Google Drive...', 10000);
       await uploadBackup(backupPayload());
       store.set('lastBackup', Date.now());
+      store.set('syncedOnce', true);
       setPending(false);
       if (!store.get('account')) await fetchAccount().catch(() => {});
       toast(`Backup selesai (${items.length} barang)`);
@@ -1025,12 +1029,17 @@
       if (!res.ok) throw new Error('Gagal mengunduh backup (' + res.status + ')');
       const list = parseBackup(await res.text());
       const when = f.modifiedTime ? fmtDateTime(Date.parse(f.modifiedTime)) : '-';
-      if (!confirm(`Backup tanggal ${when} berisi ${list.length} barang.\n\nData di HP ini (${items.length} barang) akan DIGANTI dengan isi backup. Lanjutkan?`)) {
+      // Peringatan ekstra kalau ada perubahan (tambah/ubah/hapus) yang belum sempat masuk backup
+      const warnPending = store.get('pending')
+        ? '\n\nPERHATIAN: ada perubahan di HP ini yang BELUM dibackup. Kalau dipulihkan, perubahan itu hilang, dan barang yang baru kamu hapus akan muncul lagi. Kalau tidak sedang pindah HP, pilih Batal lalu ketuk "Backup sekarang".'
+        : '';
+      if (!confirm(`Backup tanggal ${when} berisi ${list.length} barang.\n\nData di HP ini (${items.length} barang) akan DIGANTI dengan isi backup.${warnPending}\n\nLanjutkan?`)) {
         toast('Pemulihan dibatalkan');
         return;
       }
       await DB.replaceAll(list);
       store.set('fileId', f.id);
+      store.set('syncedOnce', true);
       await loadItems();
       setPending(false);
       render();

@@ -331,7 +331,7 @@
       <button type="button" class="btn primary" id="btnBackupNow">Backup sekarang</button>
       <button type="button" class="btn" id="btnRestore">Pulihkan backup</button>
     </div>
-    <p class="note">Kalau sesi Google sudah habis (sekitar 1 jam), aplikasi otomatis membuka halaman login Google saat backup.</p>
+    <p class="note">Mode otomatis: sesi Google diperbarui sendiri saat aplikasi dibuka (layar bisa berkedip sekilas). Kalau gagal, muncul pita kuning. Ketuk pita itu untuk login.</p>
 
     <div class="divider"></div>
     <p class="sub-h">Cadangan manual (tanpa Google)</p>
@@ -359,7 +359,7 @@
   /* ===================== KONFIGURASI ===================== */
   // Client ID sebaiknya diisi di file config.js. Baris di bawah hanya cadangan.
   const DEFAULT_CLIENT_ID = '';
-  const APP_VERSION = '1.1.1';
+  const APP_VERSION = '1.2.0';
   const BACKUP_FILENAME = 'rumahku-backup.json';
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const PHOTO_MAX_SIDE = 1000;     // px, sisi terpanjang foto
@@ -864,7 +864,10 @@
   const clientId = () => configClientId() || validId(store.get('clientId', ''));
   const tokenValid = () => { const t = store.get('token'); return t && t.value && t.expires - 60000 > Date.now(); };
 
-  function startAuth(after) {
+  // opts.silent = login ulang otomatis tanpa menampilkan halaman apa pun (prompt=none).
+  // Kalau Google butuh ketukan (misalnya memilih akun), Google langsung mengembalikan error
+  // dan aplikasi cukup menampilkan pita kuning, tidak tersangkut di halaman Google.
+  function startAuth(after, opts = {}) {
     if (!clientId()) {
       toast('Client ID Google belum diisi');
       openSettings();
@@ -888,7 +891,25 @@
     // Email yang pernah dipakai diisikan otomatis, supaya tidak perlu memilih akun lagi
     const hint = store.get('loginHint');
     if (hint) params.set('login_hint', hint);
+    if (opts.silent) params.set('prompt', 'none');
     location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+  }
+
+  // Login ulang otomatis kalau sesi Google habis (mode backup otomatis).
+  // Hanya jalan bila: pernah tersambung, sedang online, tidak ada jendela yang terbuka
+  // (supaya isian form tidak hilang), dan belum dicoba dalam 10 menit terakhir.
+  function maybeAutoAuth() {
+    if (!clientId() || store.get('mode', 'auto') !== 'auto' || tokenValid()) return false;
+    if (!(store.get('account') || store.get('lastBackup') || store.get('syncedOnce'))) return false;
+    if (navigator.onLine === false) return false;
+    if (document.visibilityState === 'hidden' || document.querySelector('.overlay.show')) return false;
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') return false;
+    const now = Date.now();
+    if ((store.get('autoAuthPause') || 0) > now) return false;
+    if (now - (store.get('autoAuthTry') || 0) < 10 * 60 * 1000) return false;
+    store.set('autoAuthTry', now);
+    startAuth('refresh', { silent: true });
+    return true;
   }
 
   // Dipanggil saat aplikasi dibuka: cek apakah baru kembali dari halaman login Google
@@ -901,22 +922,27 @@
     store.del('authState');
     const after = store.get('afterAuth', 'backup');
     store.del('afterAuth');
+    const auto = after === 'refresh';
     if (p.get('error')) {
+      // Login otomatis gagal (misalnya Google minta pilih akun): diam saja, jeda 1 jam, pita kuning jadi cadangan
+      if (auto) { store.set('autoAuthPause', Date.now() + 60 * 60 * 1000); setPending(store.get('pending')); return; }
       toast(p.get('error') === 'access_denied' ? 'Login dibatalkan' : 'Login gagal: ' + p.get('error'), 4000);
       return;
     }
     if (!expected || p.get('state') !== expected) {
-      toast('Login ditolak (state tidak cocok). Coba lagi.', 4000);
+      if (!auto) toast('Login ditolak (state tidak cocok). Coba lagi.', 4000);
       return;
     }
     const grantedScopes = (p.get('scope') || '').split(' ');
     if (!grantedScopes.includes(DRIVE_SCOPE)) {
-      toast('Izin Google Drive tidak dicentang. Coba lagi dan centang izinnya.', 5000);
+      if (!auto) toast('Izin Google Drive tidak dicentang. Coba lagi dan centang izinnya.', 5000);
       return;
     }
     store.set('token', { value: p.get('access_token'), expires: Date.now() + Number(p.get('expires_in') || 3600) * 1000 });
+    store.del('autoAuthPause');
     await fetchAccount().catch(() => {});
     if (after === 'restore') await restoreFromDrive();
+    else if (auto) { if (store.get('pending')) await backupToDrive({ silent: true }); }
     else await backupToDrive();
   }
 
@@ -994,7 +1020,8 @@
     }
     if (!items.length && !silent && !confirm('Semua barang di HP ini sudah dihapus.\n\nBackup sekarang akan mengosongkan isi backup di Google Drive juga. Lanjutkan?')) return;
     if (!tokenValid()) {
-      if (silent) { setPending(true); return; }
+      // Backup otomatis tapi sesi habis: tandai belum dibackup, lalu coba login ulang otomatis
+      if (silent) { setPending(true); maybeAutoAuth(); return; }
       startAuth('backup');
       return;
     }
@@ -1123,13 +1150,17 @@
     await loadItems();
     render();
     setPending(store.get('pending'));
-    await handleAuthRedirect();
-    if (tokenValid() && !store.get('account')) fetchAccount().then(updateDriveStatus).catch(() => {});
-    if (store.get('pending') && tokenValid() && store.get('mode', 'auto') === 'auto') backupToDrive({ silent: true });
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
       navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW gagal', e));
     }
+    await handleAuthRedirect();
+    if (tokenValid() && !store.get('account')) fetchAccount().then(updateDriveStatus).catch(() => {});
+    if (store.get('pending') && tokenValid() && store.get('mode', 'auto') === 'auto') backupToDrive({ silent: true });
+    // Sesi Google habis? Perbarui sendiri saat aplikasi dibuka
+    maybeAutoAuth();
   }
+  // iPhone sering "melanjutkan" aplikasi tanpa memuat ulang, jadi cek juga saat aplikasi kembali tampil
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') maybeAutoAuth(); });
   init().catch((err) => { console.error(err); toast('Aplikasi gagal dimuat: ' + err.message, 6000); });
 })();
 </script>

@@ -1,10 +1,11 @@
 // Service worker Rumahku: membuat aplikasi tetap bisa dibuka tanpa internet.
 // Naikkan angka versi ini setiap kali kamu mengubah file aplikasi.
-const CACHE = 'rumahku-v1';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
+const CACHE = 'rumahku-v2';
+const ASSETS = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // Satu file gagal (misalnya config.js belum diupload) tidak menggagalkan yang lain
+  e.waitUntil(caches.open(CACHE).then((c) => Promise.all(ASSETS.map((a) => c.add(a).catch(() => {})))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

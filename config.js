@@ -9,5 +9,5 @@
 //  setiap kali aplikasi diperbarui.
 // =====================================================================
 window.RUMAHKU_CONFIG = {
-  GOOGLE_CLIENT_ID: '381453488005-ibr8707j134qfvi3iugj1o5gn6ardnec.apps.googleusercontent.com'
+  GOOGLE_CLIENT_ID: ''
 };

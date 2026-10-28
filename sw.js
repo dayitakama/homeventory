@@ -1,6 +1,6 @@
 // Service worker Rumahku: membuat aplikasi tetap bisa dibuka tanpa internet.
 // Naikkan angka versi ini setiap kali kamu mengubah file aplikasi.
-const CACHE = 'rumahku-v2';
+const CACHE = 'rumahku-v3';
 const ASSETS = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -21,7 +21,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
   e.respondWith(
-    fetch(req)
+    // cache: 'no-cache' = selalu tanya GitHub dulu apakah ada versi baru (tidak memakai salinan lama browser)
+    fetch(new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' }))
       .then((res) => {
         if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
         return res;

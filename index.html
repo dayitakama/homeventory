@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rumahku</title>
+<meta name="description" content="Inventaris barang rumah: semua barang, mudah ditemukan.">
+<meta name="theme-color" content="#f6f4ef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Rumahku">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --card: #ffffff;
+    --ink: #1f2d26;
+    --muted: #6b746f;
+    --line: #e4e1da;
+    --green: #335e4b;
+    --green-soft: #e3ebe3;
+    --sand-soft: #f1e6da;
+    --sand-ink: #8a5a2b;
+    --blue-soft: #e3e8ee;
+    --blue-ink: #3d5872;
+    --danger: #b3412e;
+    --danger-soft: #f7e4df;
+    --warn-soft: #fbefd4;
+    --warn-ink: #8a6210;
+    --radius: 18px;
+    --shadow: 0 1px 2px rgba(31,45,38,.05), 0 4px 16px rgba(31,45,38,.05);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px; line-height: 1.45;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  body.locked { overflow: hidden; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  .app { max-width: 760px; margin: 0 auto; padding: 18px 16px 120px; }
+
+  /* Header */
+  .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 6px 0 16px; }
+  .eyebrow { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 2px; }
+  h1 { font-size: 28px; line-height: 1.15; margin: 0; letter-spacing: -.01em; }
+  .sub { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+  .icon-btn {
+    width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--green-soft); color: var(--green);
+    display: grid; place-items: center; flex: none;
+  }
+  .icon-btn svg { width: 22px; height: 22px; }
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--green); font-weight: 600; padding: 6px 0; margin: 0 0 6px; }
+  .back-btn svg { width: 18px; height: 18px; }
+
+  /* Banner */
+  .banner {
+    display: none; align-items: center; gap: 10px; width: 100%; text-align: left;
+    background: var(--warn-soft); color: var(--warn-ink); border: 0; border-radius: 14px; padding: 12px 14px; margin: 0 0 14px; font-size: 14px;
+  }
+  .banner.show { display: flex; }
+  .banner svg { width: 20px; height: 20px; flex: none; }
+
+  /* Search */
+  .search { position: relative; margin-bottom: 14px; }
+  .search svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--muted); }
+  .search input {
+    width: 100%; height: 50px; border-radius: 14px; border: 1px solid transparent; background: var(--card);
+    padding: 0 14px 0 42px; box-shadow: var(--shadow); outline: none; font-size: 16px;
+  }
+  .search input:focus { border-color: var(--green); }
+
+  /* Tiles */
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 22px; }
+  .tile { border: 0; border-radius: var(--radius); padding: 12px; text-align: left; min-height: 96px; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
+  .tile svg { width: 20px; height: 20px; }
+  .tile strong { display: block; font-size: 15px; line-height: 1.25; margin-top: 10px; color: var(--ink); }
+  .tile span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .tile.green { background: var(--green-soft); color: var(--green); }
+  .tile.sand { background: var(--sand-soft); color: var(--sand-ink); }
+  .tile.blue { background: var(--blue-soft); color: var(--blue-ink); }
+
+  /* Section */
+  .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 10px; min-height: 36px; }
+  .section-head h2 { font-size: 18px; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  .section-head .count { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 8px; white-space: nowrap; }
+  .seg { display: inline-flex; background: #ebe8e1; border-radius: 10px; padding: 3px; gap: 2px; flex: none; }
+  .seg button { border: 0; background: none; width: 36px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); }
+  .seg button.on { background: #fff; color: var(--green); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .seg svg { width: 17px; height: 17px; }
+
+  /* Tampilan kotak */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (min-width: 620px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .card { background: var(--card); border-radius: var(--radius); padding: 7px; border: 0; text-align: left; box-shadow: var(--shadow); display: flex; flex-direction: column; min-width: 0; }
+  .thumb { aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: #efede8; display: grid; place-items: center; color: #b6b2a8; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb svg { width: 34px; height: 34px; }
+  .card-body { padding: 8px 4px 4px; min-width: 0; }
+  .card-title { font-weight: 600; font-size: 15px; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meta { display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--muted); min-width: 0; }
+  .meta svg { width: 13px; height: 13px; flex: none; }
+  .meta span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px; margin-top: 6px; }
+  .chip.warn { background: var(--warn-soft); color: var(--warn-ink); }
+  .chip.bad { background: var(--danger-soft); color: var(--danger); }
+  .chip.ok { background: var(--green-soft); color: var(--green); }
+
+  /* Tampilan daftar */
+  .ilist { display: flex; flex-direction: column; gap: 8px; }
+  .irow { display: flex; align-items: center; gap: 12px; background: var(--card); border: 0; border-radius: 14px; padding: 8px 12px 8px 8px; text-align: left; box-shadow: var(--shadow); width: 100%; min-width: 0; }
+  .ithumb { width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: #efede8; display: grid; place-items: center; color: #b6b2a8; flex: none; }
+  .ithumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ithumb svg { width: 24px; height: 24px; }
+  .irow .txt { flex: 1; min-width: 0; }
+  .irow .chip { margin-top: 4px; }
+  .irow .chev { color: var(--muted); width: 18px; height: 18px; flex: none; }
+
+  /* Daftar lokasi / kategori */
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .row { display: flex; align-items: center; gap: 12px; background: var(--card); border: 0; border-radius: 14px; padding: 14px; text-align: left; box-shadow: var(--shadow); width: 100%; }
+  .row .pin { width: 38px; height: 38px; border-radius: 50%; background: var(--sand-soft); color: var(--sand-ink); display: grid; place-items: center; flex: none; }
+  .row .pin.cat { background: var(--blue-soft); color: var(--blue-ink); }
+  .row .pin svg { width: 18px; height: 18px; }
+  .row .txt { flex: 1; min-width: 0; }
+  .row .txt strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .txt span { font-size: 13px; color: var(--muted); }
+  .row .chev { color: var(--muted); width: 18px; height: 18px; flex: none; }
+  .row.quiet strong { color: var(--muted); font-weight: 600; }
+
+  /* Empty */
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .empty svg { width: 44px; height: 44px; color: #c3bfb5; margin-bottom: 8px; }
+  .empty strong { display: block; color: var(--ink); margin-bottom: 4px; }
+
+  /* FAB */
+  .fab {
+    position: fixed; right: max(18px, env(safe-area-inset-right)); bottom: calc(22px + env(safe-area-inset-bottom));
+    height: 56px; padding: 0 22px 0 18px; border-radius: 99px; border: 0; background: var(--green); color: #fff;
+    display: flex; align-items: center; gap: 8px; font-weight: 600; box-shadow: 0 6px 20px rgba(51,94,75,.35); z-index: 20;
+  }
+  .fab svg { width: 22px; height: 22px; }
+
+  /* Sheet / modal */
+  .overlay { position: fixed; inset: 0; background: rgba(28,36,32,.45); display: none; align-items: flex-end; justify-content: center; z-index: 50; }
+  .overlay.show { display: flex; }
+  @media (min-width: 620px) { .overlay { align-items: center; } }
+  .sheet {
+    background: var(--card); width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    border-radius: 24px 24px 0 0; padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 620px) { .sheet { border-radius: 24px; } }
+  .sheet h3 { margin: 0 0 14px; font-size: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  .field label .req { color: var(--danger); }
+  .field label .opt { color: var(--muted); font-weight: 500; font-size: 12.5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fff; outline: none; font-size: 16px;
+    -webkit-appearance: none; appearance: none; min-height: 48px;
+  }
+  .field select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 15px) 50%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 36px; }
+  .field textarea { min-height: 90px; resize: vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--green); }
+  .field .hint { font-size: 12.5px; color: var(--muted); margin-top: 5px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .photo-box { display: flex; gap: 12px; align-items: center; border: 1.5px dashed var(--line); border-radius: 16px; padding: 12px; margin-bottom: 16px; }
+  .photo-prev { width: 92px; height: 92px; border-radius: 12px; background: #efede8; color: #b6b2a8; display: grid; place-items: center; overflow: hidden; flex: none; }
+  .photo-prev img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-prev svg { width: 30px; height: 30px; }
+  .photo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .photo-actions .hint { width: 100%; font-size: 12.5px; color: var(--muted); }
+
+  .btn { border-radius: 14px; min-height: 50px; padding: 0 16px; border: 1px solid var(--line); background: #fff; color: var(--green); font-weight: 700; }
+  .btn.small { min-height: 40px; border-radius: 12px; font-weight: 600; font-size: 14px; padding: 0 12px; }
+  .btn.primary { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn.danger { color: var(--danger); }
+  .btn.block { width: 100%; }
+  .btn:disabled { opacity: .5; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .actions.three { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 420px) { .actions.three { grid-template-columns: 1fr; } }
+
+  .detail-photo { border-radius: 16px; overflow: hidden; background: #efede8; aspect-ratio: 4/3; display: grid; place-items: center; color: #b6b2a8; margin-bottom: 14px; }
+  .detail-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .detail-photo svg { width: 44px; height: 44px; }
+  .kv { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; font-size: 15px; margin: 6px 0 16px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; word-break: break-word; white-space: pre-wrap; }
+
+  /* Pengaturan */
+  .status { background: var(--bg); border-radius: 14px; padding: 4px 14px; margin-bottom: 16px; }
+  .srow { display: grid; grid-template-columns: 112px 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .srow:last-child { border-bottom: 0; }
+  .srow > span { color: var(--muted); }
+  .srow > b { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+  .srow > b .muted { font-weight: 400; color: var(--muted); }
+  .srow > b.url { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; font-weight: 500; word-break: break-all; }
+  .srow .chip { margin-top: 4px; }
+  .divider { height: 1px; background: var(--line); margin: 18px 0; }
+  .note { font-size: 12.5px; color: var(--muted); margin: 12px 0 0; }
+  .sub-h { font-weight: 700; font-size: 15px; margin: 0 0 8px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+    background: #1f2d26; color: #fff; padding: 11px 16px; border-radius: 12px; font-size: 14px; opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s; z-index: 100; max-width: calc(100% - 32px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top">
+    <div>
+      <p class="eyebrow">Inventaris pribadi</p>
+      <h1>Rumahku</h1>
+      <p class="sub">Semua barang, mudah ditemukan.</p>
+    </div>
+    <button class="icon-btn" id="btnSettings" aria-label="Pengaturan &amp; backup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+    </button>
+  </div>
+
+  <button class="banner" id="banner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 0 0 4.5 12a3.5 3.5 0 0 0 1 6.9"/><path d="M12 12v6"/><path d="m9 15 3-3 3 3"/></svg>
+    <span id="bannerText">Ada perubahan yang belum dibackup. Ketuk untuk backup ke Google Drive.</span>
+  </button>
+
+  <main id="view"></main>
+</div>
+
+<button class="fab" id="fab" aria-label="Tambah barang">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  Tambah
+</button>
+
+<!-- Form tambah / edit -->
+<div class="overlay" id="formOverlay">
+  <form class="sheet" id="itemForm" novalidate>
+    <h3 id="formTitle">Tambah barang</h3>
+    <div class="photo-box">
+      <div class="photo-prev" id="photoPrev"></div>
+      <div class="photo-actions">
+        <button type="button" class="btn small" id="btnPickPhoto">Pilih foto</button>
+        <button type="button" class="btn small" id="btnCamera">Kamera</button>
+        <button type="button" class="btn small danger hidden" id="btnRemovePhoto">Hapus foto</button>
+        <div class="hint">Foto bisa dari galeri atau kamera.</div>
+      </div>
+      <input type="file" id="filePick" accept="image/*" class="hidden">
+      <input type="file" id="fileCam" accept="image/*" capture="environment" class="hidden">
+    </div>
+    <div class="field">
+      <label for="fName">Nama barang <span class="req">*</span></label>
+      <input id="fName" autocomplete="off" placeholder="Contoh: Tas kerja hitam" maxlength="120">
+    </div>
+    <div class="field">
+      <label for="fLoc">Lokasi penyimpanan <span class="req">*</span></label>
+      <input id="fLoc" list="locList" autocomplete="off" placeholder="Contoh: Kamar, lemari, rak atas" maxlength="120">
+      <datalist id="locList"></datalist>
+      <div class="hint">Tulis dengan pola yang sama agar mudah dikelompokkan, misalnya "Kamar, lemari atas".</div>
+    </div>
+    <div class="field">
+      <label for="fCat">Kategori <span class="opt">(opsional)</span></label>
+      <input id="fCat" list="catList" autocomplete="off" placeholder="Contoh: Tas, pakaian, elektronik" maxlength="60">
+      <datalist id="catList"></datalist>
+    </div>
+    <div class="two">
+      <div class="field">
+        <label for="fPrice">Harga beli <span class="opt">(opsional)</span></label>
+        <input id="fPrice" inputmode="numeric" autocomplete="off" placeholder="Rp">
+      </div>
+      <div class="field">
+        <label for="fBuy">Tanggal beli <span class="opt">(opsional)</span></label>
+        <input id="fBuy" type="date">
+      </div>
+    </div>
+    <div class="field">
+      <label for="fWarranty">Garansi sampai <span class="opt">(opsional)</span></label>
+      <input id="fWarranty" type="date">
+    </div>
+    <div class="field">
+      <label for="fNotes">Catatan <span class="opt">(opsional)</span></label>
+      <textarea id="fNotes" placeholder="Warna, ukuran, detail lain..." maxlength="2000"></textarea>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" id="btnCancelForm">Batal</button>
+      <button type="submit" class="btn primary" id="btnSaveItem">Simpan barang</button>
+    </div>
+  </form>
+</div>
+
+<!-- Detail barang -->
+<div class="overlay" id="detailOverlay">
+  <div class="sheet" id="detailSheet"></div>
+</div>
+
+<!-- Pengaturan & backup -->
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <h3>Pengaturan &amp; backup</h3>
+    <div class="status" id="driveStatus"></div>
+
+    <!-- Hanya muncul kalau Client ID belum diisi di config.js -->
+    <div id="clientIdBlock" class="hidden">
+      <div class="field">
+        <label for="sClientId">Google Client ID</label>
+        <input id="sClientId" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxxxxxx.apps.googleusercontent.com">
+        <div class="hint">Client ID belum ada di file config.js. Tempel di sini, atau isi config.js di GitHub.</div>
+      </div>
+      <button type="button" class="btn small" id="btnSaveClientId">Simpan Client ID</button>
+      <div class="divider"></div>
+    </div>
+
+    <div class="field">
+      <label for="sMode">Mode backup</label>
+      <select id="sMode">
+        <option value="auto">Otomatis setelah perubahan</option>
+        <option value="manual">Manual saja</option>
+      </select>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn primary" id="btnBackupNow">Backup sekarang</button>
+      <button type="button" class="btn" id="btnRestore">Pulihkan backup</button>
+    </div>
+    <p class="note">Kalau sesi Google sudah habis (sekitar 1 jam), aplikasi otomatis membuka halaman login Google saat backup.</p>
+
+    <div class="divider"></div>
+    <p class="sub-h">Cadangan manual (tanpa Google)</p>
+    <div class="actions">
+      <button type="button" class="btn" id="btnExport">Ekspor file</button>
+      <button type="button" class="btn" id="btnImport">Impor file</button>
+    </div>
+    <input type="file" id="fileImport" accept="application/json,.json" class="hidden">
+    <p class="note">Ekspor menghasilkan satu file .json berisi semua barang dan foto. Simpan ke aplikasi Files atau Google Drive.</p>
+
+    <div class="divider"></div>
+    <button type="button" class="btn block" id="btnCloseSettings">Tutup</button>
+    <p class="note" id="appInfo" style="text-align:center"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Client ID Google disimpan di file terpisah supaya tidak tertimpa saat index.html diperbarui -->
+<script src="config.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  /* ===================== KONFIGURASI ===================== */
+  // Client ID sebaiknya diisi di file config.js. Baris di bawah hanya cadangan.
+  const DEFAULT_CLIENT_ID = '';
+  const APP_VERSION = '1.1.0';
+  const BACKUP_FILENAME = 'rumahku-backup.json';
+  const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+  const PHOTO_MAX_SIDE = 1000;     // px, sisi terpanjang foto
+  const PHOTO_QUALITY = 0.75;      // kualitas JPEG
+  const AUTO_BACKUP_DELAY = 4000;  // ms setelah perubahan terakhir
+  const UNCATEGORIZED = 'Tanpa kategori';
+
+  /* ===================== IKON ===================== */
+  const ICON = {
+    pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+    box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5V8Z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>',
+    tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>',
+    photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>',
+    back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+    chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+    grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
+    list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="5" width="4" height="4" rx="1"/><rect x="4" y="15" width="4" height="4" rx="1"/><path d="M11 7h9M11 17h9"/></svg>'
+  };
+
+  /* ===================== UTIL ===================== */
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  const norm = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const rupiah = (n) => 'Rp ' + Number(n).toLocaleString('id-ID');
+  const byName = (list) => [...list].sort((a, b) => a.name.localeCompare(b.name, 'id'));
+  const fmtDate = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso + 'T00:00:00');
+    return isNaN(d) ? iso : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  const fmtDateTime = (ms) => new Date(ms).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  function warrantyInfo(iso) {
+    if (!iso) return null;
+    const end = new Date(iso + 'T23:59:59');
+    if (isNaN(end)) return null;
+    const days = Math.ceil((end - Date.now()) / 86400000);
+    if (days < 0) return { cls: 'bad', text: 'Garansi habis' };
+    if (days <= 30) return { cls: 'warn', text: days === 0 ? 'Garansi habis hari ini' : `Garansi ${days} hari lagi` };
+    return { cls: 'ok', text: 'Masih bergaransi' };
+  }
+
+  let toastTimer;
+  function toast(msg, ms = 2600) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+  }
+
+  const store = {
+    get(k, d = null) { try { const v = localStorage.getItem('rumahku.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem('rumahku.' + k, JSON.stringify(v)); } catch {} },
+    del(k) { try { localStorage.removeItem('rumahku.' + k); } catch {} }
+  };
+
+  /* ===================== DATABASE (IndexedDB) ===================== */
+  const DB = {
+    _db: null,
+    open() {
+      if (this._db) return Promise.resolve(this._db);
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open('rumahku', 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains('items')) db.createObjectStore('items', { keyPath: 'id' });
+        };
+        req.onsuccess = () => { this._db = req.result; resolve(this._db); };
+        req.onerror = () => reject(req.error);
+      });
+    },
+    async tx(mode, fn) {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const t = db.transaction('items', mode);
+        const s = t.objectStore('items');
+        let result;
+        Promise.resolve(fn(s)).then((r) => { result = r; });
+        t.oncomplete = () => resolve(result);
+        t.onerror = () => reject(t.error);
+        t.onabort = () => reject(t.error);
+      });
+    },
+    all() {
+      return this.tx('readonly', (s) => new Promise((res) => { const r = s.getAll(); r.onsuccess = () => res(r.result); }));
+    },
+    put(item) { return this.tx('readwrite', (s) => { s.put(item); }); },
+    remove(id) { return this.tx('readwrite', (s) => { s.delete(id); }); },
+    replaceAll(items) { return this.tx('readwrite', (s) => { s.clear(); items.forEach((it) => s.put(it)); }); }
+  };
+
+  /* ===================== STATE ===================== */
+  let items = [];
+  let view = { name: 'home', query: '', key: null };
+  let editingId = null;
+  let formPhoto = null; // dataURL
+
+  async function loadItems() {
+    items = await DB.all();
+    items.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  }
+
+  // Mengelompokkan barang berdasarkan lokasi atau kategori (huruf besar/kecil & spasi dianggap sama)
+  function groupBy(field) {
+    const map = new Map();
+    for (const it of items) {
+      const raw = String(it[field] || '').trim();
+      const key = norm(raw);
+      if (!key && field === 'location') continue;
+      if (!map.has(key)) map.set(key, { key, label: raw || UNCATEGORIZED, items: [] });
+      map.get(key).items.push(it);
+    }
+    // urut abjad, "Tanpa kategori" selalu paling bawah
+    return [...map.values()].sort((a, b) => (a.key === '') - (b.key === '') || a.label.localeCompare(b.label, 'id'));
+  }
+  const locationGroups = () => groupBy('location');
+  const categoryGroups = () => groupBy('category');
+
+  /* ===================== RENDER ===================== */
+  const getLayout = () => (store.get('layout', 'grid') === 'list' ? 'list' : 'grid');
+
+  function warrantyChip(it) {
+    const w = warrantyInfo(it.warrantyUntil);
+    return w && w.cls !== 'ok' ? `<span class="chip ${w.cls}">${esc(w.text)}</span>` : '';
+  }
+
+  function cardHTML(it) {
+    return `<button class="card" data-open="${esc(it.id)}">
+      <div class="thumb">${it.photo ? `<img src="${it.photo}" alt="" loading="lazy">` : ICON.photo}</div>
+      <div class="card-body">
+        <p class="card-title">${esc(it.name)}</p>
+        <div class="meta">${ICON.pin}<span>${esc(it.location)}</span></div>
+        ${warrantyChip(it)}
+      </div>
+    </button>`;
+  }
+
+  function rowItemHTML(it) {
+    const meta = [it.location, it.category].filter((x) => x && x.trim()).map(esc).join(' · ');
+    return `<button class="irow" data-open="${esc(it.id)}">
+      <div class="ithumb">${it.photo ? `<img src="${it.photo}" alt="" loading="lazy">` : ICON.photo}</div>
+      <div class="txt">
+        <p class="card-title">${esc(it.name)}</p>
+        <div class="meta">${ICON.pin}<span>${meta}</span></div>
+        ${warrantyChip(it)}
+      </div>
+      ${ICON.chev}
+    </button>`;
+  }
+
+  function itemsHTML(list) {
+    return getLayout() === 'list'
+      ? `<div class="ilist">${list.map(rowItemHTML).join('')}</div>`
+      : `<div class="grid">${list.map(cardHTML).join('')}</div>`;
+  }
+
+  function headHTML(title, count, withToggle) {
+    const l = getLayout();
+    const toggle = withToggle ? `<div class="seg" role="group" aria-label="Pilih tampilan">
+        <button data-layout="grid" class="${l === 'grid' ? 'on' : ''}" aria-label="Tampilan kotak">${ICON.grid}</button>
+        <button data-layout="list" class="${l === 'list' ? 'on' : ''}" aria-label="Tampilan daftar">${ICON.list}</button>
+      </div>` : '';
+    return `<div class="section-head"><h2>${esc(title)}${count ? `<span class="count">${esc(count)}</span>` : ''}</h2>${toggle}</div>`;
+  }
+
+  function groupListHTML(groups, kind) {
+    const isCat = kind === 'category';
+    return `<div class="list">${groups.map((g) => `
+      <button class="row ${isCat && !g.key ? 'quiet' : ''}" ${isCat ? 'data-cat' : 'data-loc'}="${esc(g.key)}">
+        <div class="pin ${isCat ? 'cat' : ''}">${isCat ? ICON.tag : ICON.pin}</div>
+        <div class="txt"><strong>${esc(g.label)}</strong><span>${g.items.length} barang</span></div>
+        ${ICON.chev}
+      </button>`).join('')}</div>`;
+  }
+
+  const backHTML = (to, label) => `<button class="back-btn" data-go="${to}">${ICON.back}${esc(label)}</button>`;
+  const emptyHTML = (title, text) => `<div class="empty">${ICON.box}<strong>${esc(title)}</strong>${esc(text)}</div>`;
+
+  function filterItems(q) {
+    const n = norm(q);
+    if (!n) return items;
+    const words = n.split(' ');
+    return items.filter((it) => {
+      const hay = norm([it.name, it.location, it.category, it.notes].join(' '));
+      return words.every((w) => hay.includes(w));
+    });
+  }
+
+  function render() {
+    const v = $('view');
+
+    if (view.name === 'home') {
+      v.innerHTML = `
+        <div class="search">${ICON.search}<input id="q" type="search" placeholder="Cari nama barang, lokasi, kategori..." value="${esc(view.query)}" autocomplete="off" enterkeyhint="search"></div>
+        <div id="homeBody"></div>
+      `;
+      const q = $('q');
+      q.addEventListener('input', () => { view.query = q.value; renderHomeBody(); });
+      q.addEventListener('keydown', (e) => { if (e.key === 'Enter') q.blur(); });
+      renderHomeBody();
+    }
+
+    else if (view.name === 'all') {
+      v.innerHTML = backHTML('home', 'Kembali')
+        + headHTML('Semua barang', `${items.length} barang`, items.length > 0)
+        + (items.length ? itemsHTML(byName(items)) : emptyHTML('Belum ada barang', 'Ketuk tombol "Tambah" untuk mulai mencatat.'));
+    }
+
+    else if (view.name === 'locations') {
+      const groups = locationGroups();
+      v.innerHTML = backHTML('home', 'Kembali')
+        + headHTML('Lokasi', `${groups.length} tempat`, false)
+        + (groups.length ? groupListHTML(groups, 'location') : emptyHTML('Belum ada lokasi', 'Lokasi muncul otomatis saat kamu menambah barang.'));
+    }
+
+    else if (view.name === 'categories') {
+      const groups = categoryGroups();
+      const named = groups.filter((g) => g.key).length;
+      v.innerHTML = backHTML('home', 'Kembali')
+        + headHTML('Kategori', `${named} kategori`, false)
+        + (groups.length ? groupListHTML(groups, 'category') : emptyHTML('Belum ada kategori', 'Isi kolom Kategori saat menambah barang, misalnya Tas, Dokumen, atau Elektronik.'));
+    }
+
+    else if (view.name === 'location' || view.name === 'category') {
+      const isLoc = view.name === 'location';
+      const g = (isLoc ? locationGroups() : categoryGroups()).find((x) => x.key === view.key);
+      if (!g) { go(isLoc ? 'locations' : 'categories'); return; }
+      v.innerHTML = backHTML(isLoc ? 'locations' : 'categories', isLoc ? 'Semua lokasi' : 'Semua kategori')
+        + headHTML(g.label, `${g.items.length} barang`, true)
+        + itemsHTML(byName(g.items));
+    }
+  }
+
+  // Hanya bagian bawah kotak pencarian yang digambar ulang, supaya keyboard iPhone tidak tertutup saat mengetik
+  function renderHomeBody() {
+    const list = filterItems(view.query);
+    const searching = !!norm(view.query);
+    const shown = searching ? list : list.slice(0, 12);
+    const locCount = locationGroups().length;
+    const catCount = categoryGroups().filter((g) => g.key).length;
+    $('homeBody').innerHTML = `
+      <div class="tiles ${searching ? 'hidden' : ''}">
+        <button class="tile green" data-go="all">${ICON.box}<div><strong>Semua barang</strong><span>${items.length} barang</span></div></button>
+        <button class="tile sand" data-go="locations">${ICON.pin}<div><strong>Lokasi</strong><span>${locCount} tempat</span></div></button>
+        <button class="tile blue" data-go="categories">${ICON.tag}<div><strong>Kategori</strong><span>${catCount} kategori</span></div></button>
+      </div>
+      ${searching ? headHTML('Hasil pencarian', `${list.length} ditemukan`, list.length > 0) : headHTML('Barang terbaru', '', shown.length > 0)}
+      ${shown.length ? itemsHTML(shown)
+        : searching ? emptyHTML('Tidak ditemukan', 'Coba kata lain, misalnya nama lokasi atau kategori.')
+        : emptyHTML('Belum ada barang', 'Ketuk tombol "Tambah" di kanan bawah untuk mencatat barang pertama.')}
+    `;
+  }
+
+  function go(name, extra = {}) {
+    view = { name, query: name === 'home' ? view.query : '', key: null, ...extra };
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  $('view').addEventListener('click', (e) => {
+    const t = e.target.closest('[data-go],[data-open],[data-loc],[data-cat],[data-layout]');
+    if (!t) return;
+    if (t.dataset.layout) {
+      store.set('layout', t.dataset.layout);
+      if (view.name === 'home') renderHomeBody(); else render();
+    }
+    else if (t.dataset.go) go(t.dataset.go);
+    else if (t.dataset.open) openDetail(t.dataset.open);
+    else if (t.hasAttribute('data-loc')) go('location', { key: t.dataset.loc });
+    else if (t.hasAttribute('data-cat')) go('category', { key: t.dataset.cat });
+  });
+
+  /* ===================== OVERLAY ===================== */
+  function openOverlay(id) { $(id).classList.add('show'); document.body.classList.add('locked'); $(id).querySelector('.sheet').scrollTop = 0; }
+  function closeOverlay(id) {
+    $(id).classList.remove('show');
+    if (!document.querySelector('.overlay.show')) document.body.classList.remove('locked');
+  }
+  document.querySelectorAll('.overlay').forEach((o) => {
+    o.addEventListener('click', (e) => { if (e.target === o) closeOverlay(o.id); });
+  });
+
+  /* ===================== DETAIL ===================== */
+  function openDetail(id) {
+    const it = items.find((x) => x.id === id);
+    if (!it) return;
+    const w = warrantyInfo(it.warrantyUntil);
+    const rows = [
+      ['Lokasi', esc(it.location)],
+      it.category && ['Kategori', esc(it.category)],
+      it.price && ['Harga beli', esc(rupiah(it.price))],
+      it.buyDate && ['Tanggal beli', esc(fmtDate(it.buyDate))],
+      it.warrantyUntil && ['Garansi sampai', `${esc(fmtDate(it.warrantyUntil))}${w ? `<br><span class="chip ${w.cls}">${esc(w.text)}</span>` : ''}`],
+      it.notes && ['Catatan', esc(it.notes)],
+      ['Diperbarui', esc(fmtDateTime(it.updatedAt))]
+    ].filter(Boolean);
+    $('detailSheet').innerHTML = `
+      <div class="detail-photo">${it.photo ? `<img src="${it.photo}" alt="">` : ICON.photo}</div>
+      <h3>${esc(it.name)}</h3>
+      <dl class="kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+      <div class="actions three">
+        <button class="btn" id="dClose">Tutup</button>
+        <button class="btn danger" id="dDelete">Hapus</button>
+        <button class="btn primary" id="dEdit">Ubah</button>
+      </div>`;
+    $('dClose').onclick = () => closeOverlay('detailOverlay');
+    $('dEdit').onclick = () => { closeOverlay('detailOverlay'); openForm(it); };
+    $('dDelete').onclick = async () => {
+      if (!confirm(`Hapus "${it.name}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+      await DB.remove(it.id);
+      await loadItems();
+      closeOverlay('detailOverlay');
+      render();
+      toast('Barang dihapus');
+      dataChanged();
+    };
+    openOverlay('detailOverlay');
+  }
+
+  /* ===================== FORM ===================== */
+  function setPhotoPreview(dataUrl) {
+    formPhoto = dataUrl || null;
+    $('photoPrev').innerHTML = formPhoto ? `<img src="${formPhoto}" alt="Foto barang">` : ICON.photo;
+    $('btnRemovePhoto').classList.toggle('hidden', !formPhoto);
+  }
+
+  function fillDatalists() {
+    $('locList').innerHTML = locationGroups().map((g) => `<option value="${esc(g.label)}">`).join('');
+    $('catList').innerHTML = categoryGroups().filter((g) => g.key).map((g) => `<option value="${esc(g.label)}">`).join('');
+  }
+
+  function openForm(it = null) {
+    editingId = it ? it.id : null;
+    // Kalau menambah dari halaman lokasi/kategori, kolomnya langsung terisi
+    let presetLoc = '', presetCat = '';
+    if (!it && view.name === 'location') presetLoc = locationGroups().find((g) => g.key === view.key)?.label || '';
+    if (!it && view.name === 'category' && view.key) presetCat = categoryGroups().find((g) => g.key === view.key)?.label || '';
+    $('formTitle').textContent = it ? 'Ubah barang' : 'Tambah barang';
+    $('fName').value = it?.name || '';
+    $('fLoc').value = it?.location || presetLoc;
+    $('fCat').value = it?.category || presetCat;
+    $('fPrice').value = it?.price ? Number(it.price).toLocaleString('id-ID') : '';
+    $('fBuy').value = it?.buyDate || '';
+    $('fWarranty').value = it?.warrantyUntil || '';
+    $('fNotes').value = it?.notes || '';
+    setPhotoPreview(it?.photo || null);
+    fillDatalists();
+    openOverlay('formOverlay');
+  }
+
+  $('fab').onclick = () => openForm();
+  $('btnCancelForm').onclick = () => closeOverlay('formOverlay');
+  $('btnPickPhoto').onclick = () => $('filePick').click();
+  $('btnCamera').onclick = () => $('fileCam').click();
+  $('btnRemovePhoto').onclick = () => setPhotoPreview(null);
+
+  $('fPrice').addEventListener('input', (e) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 15);
+    e.target.value = digits ? Number(digits).toLocaleString('id-ID') : '';
+  });
+
+  async function handlePhotoFile(file) {
+    if (!file) return;
+    try {
+      toast('Memproses foto...', 1500);
+      setPhotoPreview(await compressImage(file));
+    } catch (err) {
+      console.error(err);
+      toast('Foto gagal dibaca. Coba foto lain.');
+    }
+  }
+  $('filePick').addEventListener('change', (e) => { handlePhotoFile(e.target.files[0]); e.target.value = ''; });
+  $('fileCam').addEventListener('change', (e) => { handlePhotoFile(e.target.files[0]); e.target.value = ''; });
+
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.round(img.naturalWidth * scale);
+        const h = Math.round(img.naturalHeight * scale);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/jpeg', PHOTO_QUALITY));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Gambar tidak bisa dibuka')); };
+      img.src = url;
+    });
+  }
+
+  $('itemForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $('fName').value.trim();
+    const location = $('fLoc').value.trim();
+    if (!name) { toast('Nama barang wajib diisi'); $('fName').focus(); return; }
+    if (!location) { toast('Lokasi penyimpanan wajib diisi'); $('fLoc').focus(); return; }
+    const old = editingId ? items.find((x) => x.id === editingId) : null;
+    const priceDigits = $('fPrice').value.replace(/\D/g, '');
+    const now = Date.now();
+    const item = {
+      id: old ? old.id : uid(),
+      name,
+      location,
+      category: $('fCat').value.trim(),
+      price: priceDigits ? Number(priceDigits) : null,
+      buyDate: $('fBuy').value || '',
+      warrantyUntil: $('fWarranty').value || '',
+      notes: $('fNotes').value.trim(),
+      photo: formPhoto,
+      createdAt: old ? old.createdAt : now,
+      updatedAt: now
+    };
+    try {
+      await DB.put(item);
+    } catch (err) {
+      console.error(err);
+      toast('Gagal menyimpan. Memori HP mungkin penuh.');
+      return;
+    }
+    await loadItems();
+    closeOverlay('formOverlay');
+    render();
+    toast(old ? 'Perubahan disimpan' : 'Barang disimpan');
+    dataChanged();
+  });
+
+  /* ===================== BACKUP DATA ===================== */
+  function backupPayload() {
+    return JSON.stringify({ app: 'rumahku', version: 1, exportedAt: new Date().toISOString(), items });
+  }
+
+  function parseBackup(text) {
+    const data = JSON.parse(text);
+    if (!data || data.app !== 'rumahku' || !Array.isArray(data.items)) throw new Error('Bukan file backup Rumahku');
+    return data.items.filter((it) => it && it.id && it.name).map((it) => ({
+      id: String(it.id),
+      name: String(it.name),
+      location: String(it.location || ''),
+      category: String(it.category || ''),
+      price: it.price ? Number(it.price) : null,
+      buyDate: String(it.buyDate || ''),
+      warrantyUntil: String(it.warrantyUntil || ''),
+      notes: String(it.notes || ''),
+      photo: typeof it.photo === 'string' && it.photo.startsWith('data:image/') ? it.photo : null,
+      createdAt: Number(it.createdAt) || Date.now(),
+      updatedAt: Number(it.updatedAt) || Date.now()
+    }));
+  }
+
+  async function exportFile() {
+    const blob = new Blob([backupPayload()], { type: 'application/json' });
+    const name = `rumahku-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    const file = new File([blob], name, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: 'Backup Rumahku' }); return; }
+      catch (err) { if (err.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  $('btnExport').onclick = exportFile;
+  $('btnImport').onclick = () => $('fileImport').click();
+  $('fileImport').addEventListener('change', async (e) => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try {
+      const list = parseBackup(await f.text());
+      if (!confirm(`File berisi ${list.length} barang. Data di HP ini akan DIGANTI dengan isi file. Lanjutkan?`)) return;
+      await DB.replaceAll(list);
+      await loadItems();
+      render();
+      updateDriveStatus();
+      toast(`${list.length} barang dipulihkan dari file`);
+      dataChanged();
+    } catch (err) {
+      console.error(err);
+      toast('File tidak bisa dibaca: ' + err.message);
+    }
+  });
+
+  /* ===================== GOOGLE DRIVE ===================== */
+  const appUrl = () => location.origin + location.pathname.replace(/index\.html$/, '');
+  const redirectUri = appUrl;
+  const validId = (s) => (/\.apps\.googleusercontent\.com$/.test(String(s || '').trim()) ? String(s).trim() : '');
+  // Client ID dari config.js (utama), dari baris DEFAULT_CLIENT_ID (cadangan)
+  const configClientId = () => validId((window.RUMAHKU_CONFIG || {}).GOOGLE_CLIENT_ID) || validId(DEFAULT_CLIENT_ID);
+  const clientId = () => configClientId() || validId(store.get('clientId', ''));
+  const tokenValid = () => { const t = store.get('token'); return t && t.value && t.expires - 60000 > Date.now(); };
+
+  function startAuth(after) {
+    if (!clientId()) {
+      toast('Client ID Google belum diisi');
+      openSettings();
+      return;
+    }
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      toast('Login Google hanya bisa di alamat HTTPS');
+      return;
+    }
+    const state = uid();
+    store.set('authState', state);
+    store.set('afterAuth', after || 'backup');
+    const params = new URLSearchParams({
+      client_id: clientId(),
+      redirect_uri: redirectUri(),
+      response_type: 'token',
+      scope: DRIVE_SCOPE,
+      include_granted_scopes: 'true',
+      state
+    });
+    // Email yang pernah dipakai diisikan otomatis, supaya tidak perlu memilih akun lagi
+    const hint = store.get('loginHint');
+    if (hint) params.set('login_hint', hint);
+    location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+  }
+
+  // Dipanggil saat aplikasi dibuka: cek apakah baru kembali dari halaman login Google
+  async function handleAuthRedirect() {
+    if (!location.hash || location.hash.length < 2) return;
+    const p = new URLSearchParams(location.hash.slice(1));
+    if (!p.has('access_token') && !p.has('error')) return;
+    history.replaceState(null, '', location.pathname + location.search);
+    const expected = store.get('authState');
+    store.del('authState');
+    const after = store.get('afterAuth', 'backup');
+    store.del('afterAuth');
+    if (p.get('error')) {
+      toast(p.get('error') === 'access_denied' ? 'Login dibatalkan' : 'Login gagal: ' + p.get('error'), 4000);
+      return;
+    }
+    if (!expected || p.get('state') !== expected) {
+      toast('Login ditolak (state tidak cocok). Coba lagi.', 4000);
+      return;
+    }
+    const grantedScopes = (p.get('scope') || '').split(' ');
+    if (!grantedScopes.includes(DRIVE_SCOPE)) {
+      toast('Izin Google Drive tidak dicentang. Coba lagi dan centang izinnya.', 5000);
+      return;
+    }
+    store.set('token', { value: p.get('access_token'), expires: Date.now() + Number(p.get('expires_in') || 3600) * 1000 });
+    await fetchAccount().catch(() => {});
+    if (after === 'restore') await restoreFromDrive();
+    else await backupToDrive();
+  }
+
+  async function driveFetch(url, opts = {}) {
+    const t = store.get('token');
+    const res = await fetch(url, { ...opts, headers: { ...(opts.headers || {}), Authorization: 'Bearer ' + t.value } });
+    if (res.status === 401) {
+      store.del('token');
+      throw Object.assign(new Error('Sesi Google habis, silakan login ulang'), { code: 401 });
+    }
+    return res;
+  }
+
+  // Mengambil email akun Google yang tersambung (izin drive.file sudah cukup)
+  async function fetchAccount() {
+    const res = await driveFetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress,displayName)');
+    if (!res.ok) return;
+    const d = await res.json();
+    if (d.user && d.user.emailAddress) {
+      store.set('account', { email: d.user.emailAddress, name: d.user.displayName || '' });
+      store.set('loginHint', d.user.emailAddress);
+    }
+  }
+
+  async function findBackupFile() {
+    const q = encodeURIComponent(`name='${BACKUP_FILENAME}' and trashed=false`);
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&orderBy=modifiedTime desc&fields=files(id,name,modifiedTime,size)&pageSize=5`);
+    if (!res.ok) throw new Error('Gagal mencari file backup (' + res.status + ')');
+    const data = await res.json();
+    return data.files && data.files[0] ? data.files[0] : null;
+  }
+
+  // Upload resumable: aman untuk file besar (lebih dari 5 MB, karena berisi foto)
+  async function uploadBackup(body) {
+    let fileId = store.get('fileId');
+    if (!fileId) {
+      const f = await findBackupFile();
+      if (f) fileId = f.id;
+    }
+    const meta = { name: BACKUP_FILENAME, mimeType: 'application/json' };
+    let init;
+    if (fileId) {
+      init = await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=resumable&fields=id`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      if (init.status === 404) { store.del('fileId'); fileId = null; }
+    }
+    if (!fileId) {
+      init = await driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Type': 'application/json' },
+        body: JSON.stringify(meta)
+      });
+    }
+    if (!init.ok) throw new Error('Gagal memulai upload (' + init.status + ')');
+    const uploadUrl = init.headers.get('Location');
+    if (!uploadUrl) throw new Error('Alamat upload tidak diterima dari Google');
+    const put = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body });
+    if (!put.ok) throw new Error('Upload gagal (' + put.status + ')');
+    const done = await put.json();
+    store.set('fileId', done.id);
+  }
+
+  let backupRunning = false;
+  async function backupToDrive({ silent = false } = {}) {
+    // Pengaman: HP tanpa barang (misalnya HP baru) tidak boleh menimpa backup lama di Drive
+    if (!items.length) {
+      if (silent) setPending(false);
+      else toast('Belum ada barang di HP ini. Kalau pindah HP, pakai "Pulihkan backup".', 4500);
+      return;
+    }
+    if (!tokenValid()) {
+      if (silent) { setPending(true); return; }
+      startAuth('backup');
+      return;
+    }
+    if (backupRunning) return;
+    backupRunning = true;
+    try {
+      if (!silent) toast('Sedang backup ke Google Drive...', 10000);
+      await uploadBackup(backupPayload());
+      store.set('lastBackup', Date.now());
+      setPending(false);
+      if (!store.get('account')) await fetchAccount().catch(() => {});
+      toast(`Backup selesai (${items.length} barang)`);
+    } catch (err) {
+      console.error(err);
+      setPending(true);
+      if (err.code === 401 && !silent) startAuth('backup');
+      else if (!silent) toast(err.message, 4500);
+    } finally {
+      backupRunning = false;
+      updateDriveStatus();
+    }
+  }
+
+  async function restoreFromDrive() {
+    if (!tokenValid()) { startAuth('restore'); return; }
+    try {
+      toast('Mencari backup di Google Drive...', 10000);
+      const f = await findBackupFile();
+      if (!f) { toast('Belum ada file backup di Google Drive', 4000); return; }
+      const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`);
+      if (!res.ok) throw new Error('Gagal mengunduh backup (' + res.status + ')');
+      const list = parseBackup(await res.text());
+      const when = f.modifiedTime ? fmtDateTime(Date.parse(f.modifiedTime)) : '-';
+      if (!confirm(`Backup tanggal ${when} berisi ${list.length} barang.\n\nData di HP ini (${items.length} barang) akan DIGANTI dengan isi backup. Lanjutkan?`)) {
+        toast('Pemulihan dibatalkan');
+        return;
+      }
+      await DB.replaceAll(list);
+      store.set('fileId', f.id);
+      await loadItems();
+      setPending(false);
+      render();
+      toast(`${list.length} barang dipulihkan`);
+    } catch (err) {
+      console.error(err);
+      if (err.code === 401) startAuth('restore');
+      else toast(err.message, 4500);
+    } finally {
+      updateDriveStatus();
+    }
+  }
+
+  function setPending(on) {
+    store.set('pending', !!on);
+    $('banner').classList.toggle('show', !!on && !!clientId());
+  }
+
+  let autoTimer;
+  function dataChanged() {
+    store.set('pending', true);
+    if (store.get('mode', 'auto') !== 'auto' || !clientId()) {
+      setPending(true);
+      return;
+    }
+    clearTimeout(autoTimer);
+    autoTimer = setTimeout(() => backupToDrive({ silent: true }), AUTO_BACKUP_DELAY);
+  }
+
+  $('banner').onclick = () => backupToDrive();
+
+  /* ===================== PENGATURAN ===================== */
+  function updateDriveStatus() {
+    const acc = store.get('account');
+    const last = store.get('lastBackup');
+    const pending = store.get('pending');
+    let akun;
+    if (!clientId()) akun = '<span class="muted">Client ID belum diisi</span>';
+    else if (acc && acc.email) akun = esc(acc.email);
+    else if (last) akun = '<span class="muted">Email tampil setelah backup berikutnya</span>';
+    else akun = '<span class="muted">Belum tersambung. Ketuk "Backup sekarang".</span>';
+    const state = pending ? '<span class="chip warn">Ada perubahan belum dibackup</span>'
+      : last ? '<span class="chip ok">Sudah aman di Drive</span>' : '';
+    $('driveStatus').innerHTML = `
+      <div class="srow"><span>Akun Google</span><b>${akun}</b></div>
+      <div class="srow"><span>Backup terakhir</span><b>${last ? esc(fmtDateTime(last)) : '<span class="muted">belum pernah</span>'}${state ? '<br>' + state : ''}</b></div>
+      <div class="srow"><span>Jumlah barang</span><b>${items.length}</b></div>
+      <div class="srow"><span>Alamat aplikasi</span><b class="url">${esc(appUrl())}</b></div>`;
+  }
+
+  function openSettings() {
+    $('clientIdBlock').classList.toggle('hidden', !!configClientId());
+    $('sClientId').value = validId(store.get('clientId', ''));
+    $('sMode').value = store.get('mode', 'auto');
+    $('appInfo').textContent = `Rumahku v${APP_VERSION}`;
+    updateDriveStatus();
+    openOverlay('settingsOverlay');
+  }
+
+  $('btnSettings').onclick = openSettings;
+  $('btnCloseSettings').onclick = () => closeOverlay('settingsOverlay');
+  $('sMode').addEventListener('change', () => {
+    store.set('mode', $('sMode').value);
+    toast($('sMode').value === 'auto' ? 'Backup otomatis aktif' : 'Backup hanya saat kamu menekan "Backup sekarang"');
+  });
+  $('btnSaveClientId').onclick = () => {
+    const id = $('sClientId').value.trim();
+    if (!validId(id)) { toast('Client ID biasanya berakhiran .apps.googleusercontent.com', 4000); return; }
+    if (id !== store.get('clientId', '')) { ['token', 'fileId', 'account', 'loginHint'].forEach((k) => store.del(k)); }
+    store.set('clientId', id);
+    updateDriveStatus();
+    setPending(store.get('pending'));
+    toast('Client ID disimpan');
+  };
+  $('btnBackupNow').onclick = () => backupToDrive();
+  $('btnRestore').onclick = () => restoreFromDrive();
+
+  /* ===================== MULAI ===================== */
+  async function init() {
+    try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch {}
+    await loadItems();
+    render();
+    setPending(store.get('pending'));
+    await handleAuthRedirect();
+    if (tokenValid() && !store.get('account')) fetchAccount().then(updateDriveStatus).catch(() => {});
+    if (store.get('pending') && tokenValid() && store.get('mode', 'auto') === 'auto') backupToDrive({ silent: true });
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW gagal', e));
+    }
+  }
+  init().catch((err) => { console.error(err); toast('Aplikasi gagal dimuat: ' + err.message, 6000); });
+})();
+</script>
+</body>
+</html>

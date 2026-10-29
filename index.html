@@ -214,6 +214,7 @@
   .kv { display: grid; grid-template-columns: 110px 1fr; gap: 10px 12px; font-size: 15px; margin: 6px 0 16px; }
   .kv dt { color: var(--muted); }
   .kv dd { margin: 0; word-break: break-word; white-space: pre-wrap; }
+  .stamp { font-size: 12.5px; color: var(--muted); margin: -6px 0 14px; line-height: 1.6; }
 
   /* Pengaturan */
   .status { background: var(--bg); border-radius: 14px; padding: 4px 14px; margin-bottom: 16px; }
@@ -410,7 +411,7 @@
   /* ===================== KONFIGURASI ===================== */
   // Client ID sebaiknya diisi di file config.js. Baris di bawah hanya cadangan.
   const DEFAULT_CLIENT_ID = '';
-  const APP_VERSION = '1.7.1';
+  const APP_VERSION = '1.7.2';
   const BACKUP_FILENAME = 'rumahku-backup.json';
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const PHOTO_MAX_SIDE = 1000;     // px, sisi terpanjang foto
@@ -789,14 +790,18 @@
       it.notes && ['Catatan', esc(it.notes)],
       it.price && ['Harga beli', esc(rupiah(it.price))],
       it.buyDate && ['Tanggal beli', esc(fmtDate(it.buyDate))],
-      it.createdAt && it.createdAt !== it.updatedAt && ['Dicatat', esc(fmtDateTime(it.createdAt))],
-      ['Diperbarui', esc(fmtDateTime(it.updatedAt))]
+    ].filter(Boolean);
+    // Waktu dicatat/diperbarui ditulis kecil dan abu-abu di bawah keterangan
+    const stamps = [
+      it.createdAt && `Dicatat ${esc(fmtDateTime(it.createdAt))}`,
+      it.updatedAt && it.updatedAt !== it.createdAt && `Diperbarui ${esc(fmtDateTime(it.updatedAt))}`
     ].filter(Boolean);
     // Foto dibuat lebih kecil supaya semua keterangan langsung terlihat; ketuk foto untuk memperbesar
     $('detailSheet').innerHTML = `
       <div class="detail-photo ${it.photo ? 'has-photo' : ''}" id="dPhoto">${photoHTML(it.photo, it.name)}${it.photo ? `<span class="zoom-badge">${ICON.search}Perbesar</span>` : ''}</div>
       <h3>${esc(it.name)}</h3>
       <dl class="kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+      ${stamps.length ? `<p class="stamp">${stamps.join(' · ')}</p>` : ''}
       <div class="detail-actions">
         <button class="btn" id="dClose">Tutup</button>
         <button class="btn danger" id="dDelete">Hapus</button>

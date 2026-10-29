@@ -98,8 +98,7 @@
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   @media (min-width: 620px) { .grid { grid-template-columns: repeat(3, 1fr); } }
   .card { background: var(--card); border-radius: var(--radius); padding: 7px; border: 0; text-align: left; box-shadow: var(--shadow); display: flex; flex-direction: column; min-width: 0; }
-  .thumb { aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: #efede8; display: grid; place-items: center; color: #b6b2a8; }
-  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb { position: relative; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: #efede8; display: grid; place-items: center; color: #b6b2a8; }
   .thumb svg { width: 34px; height: 34px; }
   .card-body { padding: 8px 4px 4px; min-width: 0; }
   .card-title { font-weight: 600; font-size: 15px; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -111,11 +110,15 @@
   .chip.bad { background: var(--danger-soft); color: var(--danger); }
   .chip.ok { background: var(--green-soft); color: var(--green); }
 
+  /* Foto: tampil utuh (tidak dipotong), sisa ruang diisi versi buram dari foto yang sama */
+  .ph { display: block; object-fit: contain; }
+  .thumb > .ph, .ithumb > .ph, .photo-prev > .ph { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .ph-bg { position: absolute; inset: -12%; width: 124%; height: 124%; object-fit: cover; filter: blur(14px) saturate(1.1); opacity: .6; }
+
   /* Tampilan daftar */
   .ilist { display: flex; flex-direction: column; gap: 8px; }
   .irow { display: flex; align-items: center; gap: 12px; background: var(--card); border: 0; border-radius: 14px; padding: 8px 12px 8px 8px; text-align: left; box-shadow: var(--shadow); width: 100%; min-width: 0; }
-  .ithumb { width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: #efede8; display: grid; place-items: center; color: #b6b2a8; flex: none; }
-  .ithumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ithumb { position: relative; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: #efede8; display: grid; place-items: center; color: #b6b2a8; flex: none; }
   .ithumb svg { width: 24px; height: 24px; }
   .irow .txt { flex: 1; min-width: 0; }
   .irow .chip { margin-top: 4px; }
@@ -168,11 +171,14 @@
   .field textarea { min-height: 90px; resize: vertical; }
   .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--green); }
   .field .hint { font-size: 12.5px; color: var(--muted); margin-top: 5px; }
+  .pick-label { font-size: 12.5px; color: var(--muted); margin: 8px 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip-btn { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 99px; padding: 6px 13px; font-size: 14px; min-height: 36px; }
+  .chip-btn.on { background: var(--blue-soft); border-color: var(--blue-ink); color: var(--blue-ink); font-weight: 600; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
   .photo-box { display: flex; gap: 12px; align-items: center; border: 1.5px dashed var(--line); border-radius: 16px; padding: 12px; margin-bottom: 16px; }
-  .photo-prev { width: 92px; height: 92px; border-radius: 12px; background: #efede8; color: #b6b2a8; display: grid; place-items: center; overflow: hidden; flex: none; }
-  .photo-prev img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-prev { position: relative; width: 92px; height: 92px; border-radius: 12px; background: #efede8; color: #b6b2a8; display: grid; place-items: center; overflow: hidden; flex: none; }
   .photo-prev svg { width: 30px; height: 30px; }
   .photo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
   .photo-actions .hint { width: 100%; font-size: 12.5px; color: var(--muted); }
@@ -187,8 +193,8 @@
   .actions.three { grid-template-columns: 1fr 1fr 1fr; }
   @media (max-width: 420px) { .actions.three { grid-template-columns: 1fr; } }
 
-  .detail-photo { border-radius: 16px; overflow: hidden; background: #efede8; aspect-ratio: 4/3; display: grid; place-items: center; color: #b6b2a8; margin-bottom: 14px; }
-  .detail-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .detail-photo { position: relative; border-radius: 16px; overflow: hidden; background: #efede8; min-height: 180px; display: grid; place-items: center; color: #b6b2a8; margin-bottom: 14px; }
+  .detail-photo .ph { position: relative; width: 100%; height: auto; max-height: 62vh; }
   .detail-photo svg { width: 44px; height: 44px; }
   .kv { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; font-size: 15px; margin: 6px 0 16px; }
   .kv dt { color: var(--muted); }
@@ -269,8 +275,8 @@
     </div>
     <div class="field">
       <label for="fCat">Kategori <span class="opt">(opsional)</span></label>
-      <input id="fCat" list="catList" autocomplete="off" placeholder="Contoh: Tas, pakaian, elektronik" maxlength="60">
-      <datalist id="catList"></datalist>
+      <input id="fCat" autocomplete="off" placeholder="Ketik kategori baru, atau pilih di bawah" maxlength="60">
+      <div id="catPick"></div>
     </div>
     <div class="two">
       <div class="field">
@@ -359,7 +365,7 @@
   /* ===================== KONFIGURASI ===================== */
   // Client ID sebaiknya diisi di file config.js. Baris di bawah hanya cadangan.
   const DEFAULT_CLIENT_ID = '';
-  const APP_VERSION = '1.2.0';
+  const APP_VERSION = '1.3.0';
   const BACKUP_FILENAME = 'rumahku-backup.json';
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const PHOTO_MAX_SIDE = 1000;     // px, sisi terpanjang foto
@@ -489,9 +495,14 @@
     return w && w.cls !== 'ok' ? `<span class="chip ${w.cls}">${esc(w.text)}</span>` : '';
   }
 
+  // Foto utuh + latar buram dari foto yang sama (supaya foto tegak/mendatar tidak terpotong)
+  const photoHTML = (src, alt = '') => (src
+    ? `<img class="ph-bg" src="${src}" alt="" aria-hidden="true"><img class="ph" src="${src}" alt="${esc(alt)}" loading="lazy">`
+    : ICON.photo);
+
   function cardHTML(it) {
     return `<button class="card" data-open="${esc(it.id)}">
-      <div class="thumb">${it.photo ? `<img src="${it.photo}" alt="" loading="lazy">` : ICON.photo}</div>
+      <div class="thumb">${photoHTML(it.photo)}</div>
       <div class="card-body">
         <p class="card-title">${esc(it.name)}</p>
         <div class="meta">${ICON.pin}<span>${esc(it.location)}</span></div>
@@ -503,7 +514,7 @@
   function rowItemHTML(it) {
     const meta = [it.location, it.category].filter((x) => x && x.trim()).map(esc).join(' · ');
     return `<button class="irow" data-open="${esc(it.id)}">
-      <div class="ithumb">${it.photo ? `<img src="${it.photo}" alt="" loading="lazy">` : ICON.photo}</div>
+      <div class="ithumb">${photoHTML(it.photo)}</div>
       <div class="txt">
         <p class="card-title">${esc(it.name)}</p>
         <div class="meta">${ICON.pin}<span>${meta}</span></div>
@@ -660,7 +671,7 @@
       ['Diperbarui', esc(fmtDateTime(it.updatedAt))]
     ].filter(Boolean);
     $('detailSheet').innerHTML = `
-      <div class="detail-photo">${it.photo ? `<img src="${it.photo}" alt="">` : ICON.photo}</div>
+      <div class="detail-photo">${photoHTML(it.photo, it.name)}</div>
       <h3>${esc(it.name)}</h3>
       <dl class="kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
       <div class="actions three">
@@ -685,14 +696,38 @@
   /* ===================== FORM ===================== */
   function setPhotoPreview(dataUrl) {
     formPhoto = dataUrl || null;
-    $('photoPrev').innerHTML = formPhoto ? `<img src="${formPhoto}" alt="Foto barang">` : ICON.photo;
+    $('photoPrev').innerHTML = photoHTML(formPhoto, 'Foto barang');
     $('btnRemovePhoto').classList.toggle('hidden', !formPhoto);
   }
 
   function fillDatalists() {
     $('locList').innerHTML = locationGroups().map((g) => `<option value="${esc(g.label)}">`).join('');
-    $('catList').innerHTML = categoryGroups().filter((g) => g.key).map((g) => `<option value="${esc(g.label)}">`).join('');
   }
+
+  // Tombol kategori yang sudah pernah dipakai (paling sering dipakai di depan). Ketuk untuk memilih, ketuk lagi untuk batal.
+  function renderCatPick() {
+    const cats = categoryGroups().filter((g) => g.key)
+      .sort((a, b) => b.items.length - a.items.length || a.label.localeCompare(b.label, 'id'));
+    if (!cats.length) {
+      $('catPick').innerHTML = '<div class="hint">Kategori yang pernah kamu isi akan muncul di sini, tinggal ketuk untuk memilih.</div>';
+      return;
+    }
+    const cur = norm($('fCat').value);
+    $('catPick').innerHTML = `<div class="pick-label">Pilih kategori yang sudah ada:</div><div class="chips">${
+      cats.map((g) => `<button type="button" class="chip-btn ${g.key === cur ? 'on' : ''}" data-cat-pick="${esc(g.label)}">${esc(g.label)}</button>`).join('')
+    }</div>`;
+  }
+  function syncCatPick() {
+    const cur = norm($('fCat').value);
+    document.querySelectorAll('#catPick .chip-btn').forEach((b) => b.classList.toggle('on', norm(b.dataset.catPick) === cur));
+  }
+  $('catPick').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-cat-pick]');
+    if (!b) return;
+    $('fCat').value = b.classList.contains('on') ? '' : b.dataset.catPick;
+    syncCatPick();
+  });
+  $('fCat').addEventListener('input', syncCatPick);
 
   function openForm(it = null) {
     editingId = it ? it.id : null;
@@ -710,6 +745,7 @@
     $('fNotes').value = it?.notes || '';
     setPhotoPreview(it?.photo || null);
     fillDatalists();
+    renderCatPick();
     openOverlay('formOverlay');
   }
 

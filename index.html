@@ -171,10 +171,14 @@
   .field textarea { min-height: 90px; resize: vertical; }
   .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--green); }
   .field .hint { font-size: 12.5px; color: var(--muted); margin-top: 5px; }
-  .pick-label { font-size: 12.5px; color: var(--muted); margin: 8px 0 6px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip-btn { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 99px; padding: 6px 13px; font-size: 14px; min-height: 36px; }
-  .chip-btn.on { background: var(--blue-soft); border-color: var(--blue-ink); color: var(--blue-ink); font-weight: 600; }
+  /* Kolom isian + tombol daftar pilihan (▾) di ujung kanan, tidak menambah baris */
+  .combo { position: relative; }
+  .field .combo input { padding-right: 60px; }
+  .combo-btn { position: absolute; top: 1px; right: 1px; bottom: 1px; width: 48px; display: grid; place-items: center; color: var(--green); background: var(--green-soft); border-radius: 0 11px 11px 0; pointer-events: none; }
+  .combo-btn svg { width: 18px; height: 18px; }
+  .field .combo-pick { position: absolute; top: 0; right: 0; width: 50px; height: 100%; min-height: 0; padding: 0; border: 0; opacity: 0; font-size: 16px; cursor: pointer; }
+  .combo.empty .combo-btn, .combo.empty .combo-pick { display: none; }
+  .field .combo.empty input { padding-right: 14px; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
   .photo-box { display: flex; gap: 12px; align-items: center; border: 1.5px dashed var(--line); border-radius: 16px; padding: 12px; margin-bottom: 16px; }
@@ -192,6 +196,8 @@
   .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
   .actions.three { grid-template-columns: 1fr 1fr 1fr; }
   @media (max-width: 420px) { .actions.three { grid-template-columns: 1fr; } }
+  .group-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: -2px 0 14px; }
+  .group-actions .btn svg { width: 15px; height: 15px; vertical-align: -2px; margin-right: 4px; }
 
   .detail-photo { position: relative; border-radius: 16px; overflow: hidden; background: #efede8; min-height: 180px; display: grid; place-items: center; color: #b6b2a8; margin-bottom: 14px; }
   .detail-photo .ph { position: relative; width: 100%; height: auto; max-height: 62vh; }
@@ -269,14 +275,21 @@
     </div>
     <div class="field">
       <label for="fLoc">Lokasi penyimpanan <span class="req">*</span></label>
-      <input id="fLoc" list="locList" autocomplete="off" placeholder="Contoh: Kamar, lemari, rak atas" maxlength="120">
-      <datalist id="locList"></datalist>
-      <div class="hint">Tulis dengan pola yang sama agar mudah dikelompokkan, misalnya "Kamar, lemari atas".</div>
+      <div class="combo">
+        <input id="fLoc" autocomplete="off" placeholder="Contoh: Kamar, lemari, rak atas" maxlength="120">
+        <span class="combo-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        <select id="locPick" class="combo-pick" aria-label="Pilih lokasi yang sudah ada"></select>
+      </div>
+      <div class="hint" id="locHint"></div>
     </div>
     <div class="field">
       <label for="fCat">Kategori <span class="opt">(opsional)</span></label>
-      <input id="fCat" autocomplete="off" placeholder="Ketik kategori baru, atau pilih di bawah" maxlength="60">
-      <div id="catPick"></div>
+      <div class="combo">
+        <input id="fCat" autocomplete="off" placeholder="Contoh: Tas, pakaian, elektronik" maxlength="60">
+        <span class="combo-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        <select id="catPick" class="combo-pick" aria-label="Pilih kategori yang sudah ada"></select>
+      </div>
+      <div class="hint" id="catHint"></div>
     </div>
     <div class="two">
       <div class="field">
@@ -299,6 +312,27 @@
     <div class="actions">
       <button type="button" class="btn" id="btnCancelForm">Batal</button>
       <button type="submit" class="btn primary" id="btnSaveItem">Simpan barang</button>
+    </div>
+  </form>
+</div>
+
+<!-- Kelola lokasi / kategori (ganti nama, pindahkan, gabung) -->
+<div class="overlay" id="manageOverlay">
+  <form class="sheet" id="manageForm" novalidate>
+    <h3 id="manageTitle">Ganti nama</h3>
+    <p class="sub" id="manageInfo" style="margin:-6px 0 14px"></p>
+    <div class="field">
+      <label for="mName" id="mLabel">Nama baru</label>
+      <div class="combo">
+        <input id="mName" autocomplete="off" maxlength="120">
+        <span class="combo-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        <select id="mPick" class="combo-pick" aria-label="Pilih yang sudah ada"></select>
+      </div>
+      <div class="hint" id="mHint"></div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" id="mCancel">Batal</button>
+      <button type="submit" class="btn primary" id="mSave">Simpan</button>
     </div>
   </form>
 </div>
@@ -365,7 +399,7 @@
   /* ===================== KONFIGURASI ===================== */
   // Client ID sebaiknya diisi di file config.js. Baris di bawah hanya cadangan.
   const DEFAULT_CLIENT_ID = '';
-  const APP_VERSION = '1.3.0';
+  const APP_VERSION = '1.6.0';
   const BACKUP_FILENAME = 'rumahku-backup.json';
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const PHOTO_MAX_SIDE = 1000;     // px, sisi terpanjang foto
@@ -457,6 +491,7 @@
     },
     put(item) { return this.tx('readwrite', (s) => { s.put(item); }); },
     remove(id) { return this.tx('readwrite', (s) => { s.delete(id); }); },
+    putMany(list) { return this.tx('readwrite', (s) => { list.forEach((it) => s.put(it)); }); },
     replaceAll(items) { return this.tx('readwrite', (s) => { s.clear(); items.forEach((it) => s.put(it)); }); }
   };
 
@@ -603,8 +638,18 @@
       if (!g) { go(isLoc ? 'locations' : 'categories'); return; }
       v.innerHTML = backHTML(isLoc ? 'locations' : 'categories', isLoc ? 'Semua lokasi' : 'Semua kategori')
         + headHTML(g.label, `${g.items.length} barang`, true)
+        + groupActionsHTML(isLoc, g)
         + itemsHTML(byName(g.items));
     }
+  }
+
+  const PENCIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>';
+  function groupActionsHTML(isLoc, g) {
+    if (!isLoc && !g.key) return ''; // "Tanpa kategori" tidak bisa diganti nama/dihapus
+    return `<div class="group-actions">
+      <button class="btn small" data-manage="rename">${PENCIL}${isLoc ? 'Ganti nama / pindahkan' : 'Ganti nama / gabung'}</button>
+      ${isLoc ? '' : '<button class="btn small danger" data-manage="delete">Hapus kategori</button>'}
+    </div>`;
   }
 
   // Hanya bagian bawah kotak pencarian yang digambar ulang, supaya keyboard iPhone tidak tertutup saat mengetik
@@ -634,7 +679,7 @@
   }
 
   $('view').addEventListener('click', (e) => {
-    const t = e.target.closest('[data-go],[data-open],[data-loc],[data-cat],[data-layout]');
+    const t = e.target.closest('[data-go],[data-open],[data-loc],[data-cat],[data-layout],[data-manage]');
     if (!t) return;
     if (t.dataset.layout) {
       store.set('layout', t.dataset.layout);
@@ -644,7 +689,89 @@
     else if (t.dataset.open) openDetail(t.dataset.open);
     else if (t.hasAttribute('data-loc')) go('location', { key: t.dataset.loc });
     else if (t.hasAttribute('data-cat')) go('category', { key: t.dataset.cat });
+    else if (t.dataset.manage === 'rename') openManage();
+    else if (t.dataset.manage === 'delete') deleteCategory();
   });
+
+  /* ===================== KELOLA LOKASI / KATEGORI ===================== */
+  // Ganti nama berlaku untuk semua barang di lokasi/kategori itu sekaligus.
+  // Memilih nama yang sudah ada = memindahkan/menggabungkan semua barangnya ke sana.
+  let manageCtx = null;
+
+  function currentGroup() {
+    const isLoc = view.name === 'location';
+    const g = (isLoc ? locationGroups() : categoryGroups()).find((x) => x.key === view.key);
+    return g ? { isLoc, g } : null;
+  }
+
+  function openManage() {
+    const c = currentGroup();
+    if (!c) return;
+    const { isLoc, g } = c;
+    manageCtx = { isLoc, key: g.key, label: g.label };
+    const word = isLoc ? 'lokasi' : 'kategori';
+    $('manageTitle').textContent = isLoc ? 'Ganti nama atau pindahkan lokasi' : 'Ganti nama atau gabung kategori';
+    $('manageInfo').textContent = `${g.items.length} barang di "${g.label}" akan ikut berubah sekaligus.`;
+    $('mLabel').textContent = `Nama ${word} baru`;
+    $('mName').value = g.label;
+    const others = (isLoc ? locationGroups() : categoryGroups()).filter((x) => x.key && x.key !== g.key)
+      .map((x) => x.label).sort((a, b) => a.localeCompare(b, 'id'));
+    $('mPick').closest('.combo').classList.toggle('empty', !others.length);
+    $('mPick').innerHTML = `<option value="" disabled selected>Pilih ${word} yang sudah ada</option>`
+      + others.map((l) => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+    $('mHint').textContent = others.length
+      ? `Ketik nama baru, atau ketuk ▾ untuk memindahkan semua barang ke ${word} yang sudah ada.`
+      : `Ketik nama ${word} yang baru.`;
+    openOverlay('manageOverlay');
+  }
+
+  $('mPick').addEventListener('change', () => { if ($('mPick').value) $('mName').value = $('mPick').value; });
+  $('mCancel').onclick = () => closeOverlay('manageOverlay');
+
+  $('manageForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!manageCtx) return;
+    const { isLoc, key, label } = manageCtx;
+    const field = isLoc ? 'location' : 'category';
+    const word = isLoc ? 'lokasi' : 'kategori';
+    const newName = $('mName').value.trim().replace(/\s+/g, ' ');
+    if (!newName) { toast(`Nama ${word} tidak boleh kosong`); $('mName').focus(); return; }
+    if (newName === label) { closeOverlay('manageOverlay'); return; }
+    const newKey = norm(newName);
+    const target = (isLoc ? locationGroups() : categoryGroups()).find((x) => x.key === newKey && x.key !== key);
+    const affected = items.filter((it) => norm(it[field]) === key);
+    if (target && !confirm(`${isLoc ? 'Lokasi' : 'Kategori'} "${target.label}" sudah ada (${target.items.length} barang).\n\n${affected.length} barang dari "${label}" akan digabung ke sana. Lanjutkan?`)) return;
+    const finalName = target ? target.label : newName;
+    const now = Date.now();
+    try {
+      await DB.putMany(affected.map((it) => ({ ...it, [field]: finalName, updatedAt: now })));
+    } catch (err) {
+      console.error(err);
+      toast('Gagal menyimpan perubahan');
+      return;
+    }
+    await loadItems();
+    closeOverlay('manageOverlay');
+    manageCtx = null;
+    view.key = newKey;
+    render();
+    toast(target ? `${affected.length} barang dipindahkan ke "${finalName}"` : `${isLoc ? 'Lokasi' : 'Kategori'} diganti menjadi "${finalName}"`);
+    dataChanged();
+  });
+
+  // Hapus kategori: barangnya tetap ada, hanya jadi "Tanpa kategori"
+  async function deleteCategory() {
+    const c = currentGroup();
+    if (!c || c.isLoc || !c.g.key) return;
+    const { g } = c;
+    if (!confirm(`Hapus kategori "${g.label}"?\n\n${g.items.length} barangnya TIDAK ikut terhapus, hanya pindah ke "Tanpa kategori".`)) return;
+    const now = Date.now();
+    await DB.putMany(g.items.map((it) => ({ ...it, category: '', updatedAt: now })));
+    await loadItems();
+    go('categories');
+    toast(`Kategori "${g.label}" dihapus`);
+    dataChanged();
+  }
 
   /* ===================== OVERLAY ===================== */
   function openOverlay(id) { $(id).classList.add('show'); document.body.classList.add('locked'); $(id).querySelector('.sheet').scrollTop = 0; }
@@ -700,34 +827,42 @@
     $('btnRemovePhoto').classList.toggle('hidden', !formPhoto);
   }
 
-  function fillDatalists() {
-    $('locList').innerHTML = locationGroups().map((g) => `<option value="${esc(g.label)}">`).join('');
+  // Daftar pilihan (▾) di ujung kolom Lokasi dan Kategori, berisi yang pernah ditulis (urut abjad).
+  // Memilih dari daftar mengisi kolom; kolom tetap bisa diketik untuk isian baru.
+  // Di iPhone, daftar muncul sebagai roda pilihan bawaan iOS.
+  const PICK = {
+    location: { input: 'fLoc', sel: 'locPick', hint: 'locHint', groups: () => locationGroups(),
+      title: 'Pilih lokasi yang sudah ada',
+      hintOn: 'Ketuk ▾ untuk pilih lokasi yang sudah ada, atau ketik baru.',
+      hintOff: 'Tulis dengan pola yang sama, misalnya "Kamar, lemari atas".' },
+    category: { input: 'fCat', sel: 'catPick', hint: 'catHint', groups: () => categoryGroups(),
+      title: 'Pilih kategori yang sudah ada',
+      hintOn: 'Ketuk ▾ untuk pilih kategori yang ada, atau ketik baru.',
+      hintOff: '' }
+  };
+
+  function renderPick(kind) {
+    const cfg = PICK[kind];
+    const labels = cfg.groups().filter((g) => g.key).map((g) => g.label).sort((a, b) => a.localeCompare(b, 'id'));
+    $(cfg.sel).closest('.combo').classList.toggle('empty', !labels.length);
+    $(cfg.sel).innerHTML = `<option value="" disabled>${esc(cfg.title)}</option>`
+      + labels.map((l) => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+    $(cfg.hint).textContent = labels.length ? cfg.hintOn : cfg.hintOff;
+    $(cfg.hint).classList.toggle('hidden', !$(cfg.hint).textContent);
+    syncPick(kind);
+  }
+  // Supaya saat dibuka, daftar langsung menunjuk isian yang sedang tertulis
+  function syncPick(kind) {
+    const cfg = PICK[kind], sel = $(cfg.sel), cur = norm($(cfg.input).value);
+    const opt = [...sel.options].find((o) => o.value && norm(o.value) === cur);
+    sel.selectedIndex = opt ? opt.index : 0;
   }
 
-  // Tombol kategori yang sudah pernah dipakai (paling sering dipakai di depan). Ketuk untuk memilih, ketuk lagi untuk batal.
-  function renderCatPick() {
-    const cats = categoryGroups().filter((g) => g.key)
-      .sort((a, b) => b.items.length - a.items.length || a.label.localeCompare(b.label, 'id'));
-    if (!cats.length) {
-      $('catPick').innerHTML = '<div class="hint">Kategori yang pernah kamu isi akan muncul di sini, tinggal ketuk untuk memilih.</div>';
-      return;
-    }
-    const cur = norm($('fCat').value);
-    $('catPick').innerHTML = `<div class="pick-label">Pilih kategori yang sudah ada:</div><div class="chips">${
-      cats.map((g) => `<button type="button" class="chip-btn ${g.key === cur ? 'on' : ''}" data-cat-pick="${esc(g.label)}">${esc(g.label)}</button>`).join('')
-    }</div>`;
-  }
-  function syncCatPick() {
-    const cur = norm($('fCat').value);
-    document.querySelectorAll('#catPick .chip-btn').forEach((b) => b.classList.toggle('on', norm(b.dataset.catPick) === cur));
-  }
-  $('catPick').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-cat-pick]');
-    if (!b) return;
-    $('fCat').value = b.classList.contains('on') ? '' : b.dataset.catPick;
-    syncCatPick();
+  Object.keys(PICK).forEach((kind) => {
+    const cfg = PICK[kind];
+    $(cfg.sel).addEventListener('change', () => { if ($(cfg.sel).value) $(cfg.input).value = $(cfg.sel).value; });
+    $(cfg.input).addEventListener('input', () => syncPick(kind));
   });
-  $('fCat').addEventListener('input', syncCatPick);
 
   function openForm(it = null) {
     editingId = it ? it.id : null;
@@ -744,8 +879,8 @@
     $('fWarranty').value = it?.warrantyUntil || '';
     $('fNotes').value = it?.notes || '';
     setPhotoPreview(it?.photo || null);
-    fillDatalists();
-    renderCatPick();
+    renderPick('location');
+    renderPick('category');
     openOverlay('formOverlay');
   }
 

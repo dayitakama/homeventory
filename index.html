@@ -199,10 +199,19 @@
   .group-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: -2px 0 14px; }
   .group-actions .btn svg { width: 15px; height: 15px; vertical-align: -2px; margin-right: 4px; }
 
-  .detail-photo { position: relative; border-radius: 16px; overflow: hidden; background: #efede8; min-height: 180px; display: grid; place-items: center; color: #b6b2a8; margin-bottom: 14px; }
-  .detail-photo .ph { position: relative; width: 100%; height: auto; max-height: 62vh; }
+  .detail-photo { position: relative; border-radius: 16px; overflow: hidden; background: #efede8; min-height: 120px; display: grid; place-items: center; color: #b6b2a8; margin-bottom: 14px; }
+  .detail-photo.has-photo { cursor: zoom-in; }
+  .detail-photo .ph { position: relative; width: 100%; height: auto; max-height: 34vh; }
+  .zoom-badge { position: absolute; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 4px; background: rgba(31,45,38,.72); color: #fff; font-size: 12px; font-weight: 600; padding: 5px 9px; border-radius: 99px; }
+  .detail-photo .zoom-badge svg { width: 14px; height: 14px; }
+  .detail-actions { position: sticky; bottom: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--card); padding: 12px 0 2px; border-top: 1px solid var(--line); }
+  .detail-actions .btn { min-height: 46px; padding: 0 8px; }
+  .viewer { position: fixed; inset: 0; background: rgba(10,14,12,.95); display: none; align-items: center; justify-content: center; z-index: 90; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  .viewer.show { display: flex; }
+  .viewer img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .viewer-close { position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 14px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.16); color: #fff; font-size: 26px; line-height: 1; }
   .detail-photo svg { width: 44px; height: 44px; }
-  .kv { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; font-size: 15px; margin: 6px 0 16px; }
+  .kv { display: grid; grid-template-columns: 110px 1fr; gap: 10px 12px; font-size: 15px; margin: 6px 0 16px; }
   .kv dt { color: var(--muted); }
   .kv dd { margin: 0; word-break: break-word; white-space: pre-wrap; }
 
@@ -291,6 +300,10 @@
       </div>
       <div class="hint" id="catHint"></div>
     </div>
+    <div class="field">
+      <label for="fNotes">Catatan <span class="opt">(opsional)</span></label>
+      <textarea id="fNotes" placeholder="Warna, ukuran, detail lain..." maxlength="2000"></textarea>
+    </div>
     <div class="two">
       <div class="field">
         <label for="fPrice">Harga beli <span class="opt">(opsional)</span></label>
@@ -300,14 +313,6 @@
         <label for="fBuy">Tanggal beli <span class="opt">(opsional)</span></label>
         <input id="fBuy" type="date">
       </div>
-    </div>
-    <div class="field">
-      <label for="fWarranty">Garansi sampai <span class="opt">(opsional)</span></label>
-      <input id="fWarranty" type="date">
-    </div>
-    <div class="field">
-      <label for="fNotes">Catatan <span class="opt">(opsional)</span></label>
-      <textarea id="fNotes" placeholder="Warna, ukuran, detail lain..." maxlength="2000"></textarea>
     </div>
     <div class="actions">
       <button type="button" class="btn" id="btnCancelForm">Batal</button>
@@ -335,6 +340,12 @@
       <button type="submit" class="btn primary" id="mSave">Simpan</button>
     </div>
   </form>
+</div>
+
+<!-- Foto layar penuh (ketuk foto di detail barang) -->
+<div class="viewer" id="photoViewer" role="dialog" aria-label="Foto barang">
+  <img id="viewerImg" alt="">
+  <button type="button" class="viewer-close" aria-label="Tutup foto">&times;</button>
 </div>
 
 <!-- Detail barang -->
@@ -399,7 +410,7 @@
   /* ===================== KONFIGURASI ===================== */
   // Client ID sebaiknya diisi di file config.js. Baris di bawah hanya cadangan.
   const DEFAULT_CLIENT_ID = '';
-  const APP_VERSION = '1.6.0';
+  const APP_VERSION = '1.7.1';
   const BACKUP_FILENAME = 'rumahku-backup.json';
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const PHOTO_MAX_SIDE = 1000;     // px, sisi terpanjang foto
@@ -434,15 +445,6 @@
   };
   const fmtDateTime = (ms) => new Date(ms).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-  function warrantyInfo(iso) {
-    if (!iso) return null;
-    const end = new Date(iso + 'T23:59:59');
-    if (isNaN(end)) return null;
-    const days = Math.ceil((end - Date.now()) / 86400000);
-    if (days < 0) return { cls: 'bad', text: 'Garansi habis' };
-    if (days <= 30) return { cls: 'warn', text: days === 0 ? 'Garansi habis hari ini' : `Garansi ${days} hari lagi` };
-    return { cls: 'ok', text: 'Masih bergaransi' };
-  }
 
   let toastTimer;
   function toast(msg, ms = 2600) {
@@ -525,10 +527,6 @@
   /* ===================== RENDER ===================== */
   const getLayout = () => (store.get('layout', 'grid') === 'list' ? 'list' : 'grid');
 
-  function warrantyChip(it) {
-    const w = warrantyInfo(it.warrantyUntil);
-    return w && w.cls !== 'ok' ? `<span class="chip ${w.cls}">${esc(w.text)}</span>` : '';
-  }
 
   // Foto utuh + latar buram dari foto yang sama (supaya foto tegak/mendatar tidak terpotong)
   const photoHTML = (src, alt = '') => (src
@@ -541,7 +539,6 @@
       <div class="card-body">
         <p class="card-title">${esc(it.name)}</p>
         <div class="meta">${ICON.pin}<span>${esc(it.location)}</span></div>
-        ${warrantyChip(it)}
       </div>
     </button>`;
   }
@@ -553,7 +550,6 @@
       <div class="txt">
         <p class="card-title">${esc(it.name)}</p>
         <div class="meta">${ICON.pin}<span>${meta}</span></div>
-        ${warrantyChip(it)}
       </div>
       ${ICON.chev}
     </button>`;
@@ -787,25 +783,26 @@
   function openDetail(id) {
     const it = items.find((x) => x.id === id);
     if (!it) return;
-    const w = warrantyInfo(it.warrantyUntil);
     const rows = [
       ['Lokasi', esc(it.location)],
       it.category && ['Kategori', esc(it.category)],
+      it.notes && ['Catatan', esc(it.notes)],
       it.price && ['Harga beli', esc(rupiah(it.price))],
       it.buyDate && ['Tanggal beli', esc(fmtDate(it.buyDate))],
-      it.warrantyUntil && ['Garansi sampai', `${esc(fmtDate(it.warrantyUntil))}${w ? `<br><span class="chip ${w.cls}">${esc(w.text)}</span>` : ''}`],
-      it.notes && ['Catatan', esc(it.notes)],
+      it.createdAt && it.createdAt !== it.updatedAt && ['Dicatat', esc(fmtDateTime(it.createdAt))],
       ['Diperbarui', esc(fmtDateTime(it.updatedAt))]
     ].filter(Boolean);
+    // Foto dibuat lebih kecil supaya semua keterangan langsung terlihat; ketuk foto untuk memperbesar
     $('detailSheet').innerHTML = `
-      <div class="detail-photo">${photoHTML(it.photo, it.name)}</div>
+      <div class="detail-photo ${it.photo ? 'has-photo' : ''}" id="dPhoto">${photoHTML(it.photo, it.name)}${it.photo ? `<span class="zoom-badge">${ICON.search}Perbesar</span>` : ''}</div>
       <h3>${esc(it.name)}</h3>
       <dl class="kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
-      <div class="actions three">
+      <div class="detail-actions">
         <button class="btn" id="dClose">Tutup</button>
         <button class="btn danger" id="dDelete">Hapus</button>
         <button class="btn primary" id="dEdit">Ubah</button>
       </div>`;
+    if (it.photo) $('dPhoto').onclick = () => { $('viewerImg').src = it.photo; $('photoViewer').classList.add('show'); };
     $('dClose').onclick = () => closeOverlay('detailOverlay');
     $('dEdit').onclick = () => { closeOverlay('detailOverlay'); openForm(it); };
     $('dDelete').onclick = async () => {
@@ -819,6 +816,8 @@
     };
     openOverlay('detailOverlay');
   }
+
+  $('photoViewer').onclick = () => { $('photoViewer').classList.remove('show'); $('viewerImg').removeAttribute('src'); };
 
   /* ===================== FORM ===================== */
   function setPhotoPreview(dataUrl) {
@@ -876,7 +875,6 @@
     $('fCat').value = it?.category || presetCat;
     $('fPrice').value = it?.price ? Number(it.price).toLocaleString('id-ID') : '';
     $('fBuy').value = it?.buyDate || '';
-    $('fWarranty').value = it?.warrantyUntil || '';
     $('fNotes').value = it?.notes || '';
     setPhotoPreview(it?.photo || null);
     renderPick('location');
@@ -946,7 +944,7 @@
       category: $('fCat').value.trim(),
       price: priceDigits ? Number(priceDigits) : null,
       buyDate: $('fBuy').value || '',
-      warrantyUntil: $('fWarranty').value || '',
+      warrantyUntil: old ? (old.warrantyUntil || '') : '',
       notes: $('fNotes').value.trim(),
       photo: formPhoto,
       createdAt: old ? old.createdAt : now,

@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rumahku</title>
+<title>Homeventory</title>
 <meta name="description" content="Inventaris barang rumah: semua barang, mudah ditemukan.">
 <meta name="theme-color" content="#f6f4ef">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Rumahku">
+<meta name="apple-mobile-web-app-title" content="Homeventory">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -49,6 +49,7 @@
   .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 6px 0 16px; }
   .eyebrow { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 2px; }
   h1 { font-size: 28px; line-height: 1.15; margin: 0; letter-spacing: -.01em; }
+  .credit { margin: 3px 0 0; font-size: 12px; font-weight: 600; color: var(--green); letter-spacing: .01em; }
   .sub { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
   .icon-btn {
     width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--green-soft); color: var(--green);
@@ -244,8 +245,8 @@
   <div class="top">
     <div>
       <p class="eyebrow">Inventaris pribadi</p>
-      <h1>Rumahku</h1>
-      <p class="sub">Semua barang, mudah ditemukan.</p>
+      <h1>Homeventory</h1>
+      <p class="credit">by afh_dayitakama · © 2026</p>
     </div>
     <button class="icon-btn" id="btnSettings" aria-label="Pengaturan &amp; backup">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
@@ -412,7 +413,7 @@
   /* ===================== KONFIGURASI ===================== */
   // Client ID sebaiknya diisi di file config.js. Baris di bawah hanya cadangan.
   const DEFAULT_CLIENT_ID = '';
-  const APP_VERSION = '1.7.4';
+  const APP_VERSION = '1.8.1';
   const BACKUP_FILENAME = 'rumahku-backup.json';
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const PHOTO_MAX_SIDE = 1000;     // px, sisi terpanjang foto
@@ -977,7 +978,7 @@
 
   function parseBackup(text) {
     const data = JSON.parse(text);
-    if (!data || data.app !== 'rumahku' || !Array.isArray(data.items)) throw new Error('Bukan file backup Rumahku');
+    if (!data || data.app !== 'rumahku' || !Array.isArray(data.items)) throw new Error('Bukan file backup Homeventory');
     return data.items.filter((it) => it && it.id && it.name).map((it) => ({
       id: String(it.id),
       name: String(it.name),
@@ -995,10 +996,10 @@
 
   async function exportFile() {
     const blob = new Blob([backupPayload()], { type: 'application/json' });
-    const name = `rumahku-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    const name = `homeventory-backup-${new Date().toISOString().slice(0, 10)}.json`;
     const file = new File([blob], name, { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: 'Backup Rumahku' }); return; }
+      try { await navigator.share({ files: [file], title: 'Backup Homeventory' }); return; }
       catch (err) { if (err.name === 'AbortError') return; }
     }
     const a = document.createElement('a');
@@ -1296,7 +1297,7 @@
     $('clientIdBlock').classList.toggle('hidden', !!configClientId());
     $('sClientId').value = validId(store.get('clientId', ''));
     $('sMode').value = store.get('mode', 'auto');
-    $('appInfo').textContent = `Rumahku v${APP_VERSION}`;
+    $('appInfo').textContent = `Homeventory v${APP_VERSION}`;
     updateDriveStatus();
     openOverlay('settingsOverlay');
   }

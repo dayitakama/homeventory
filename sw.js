@@ -1,6 +1,6 @@
 // Service worker Rumahku: membuat aplikasi tetap bisa dibuka tanpa internet.
 // Naikkan angka versi ini setiap kali kamu mengubah file aplikasi.
-const CACHE = 'rumahku-v14';
+const CACHE = 'rumahku-v17';
 const ASSETS = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {

@@ -134,6 +134,10 @@
   .row { display: flex; align-items: center; gap: 12px; background: var(--card); border: 0; border-radius: 14px; padding: 14px; text-align: left; box-shadow: var(--shadow); width: 100%; }
   .row .pin { width: 38px; height: 38px; border-radius: 50%; background: var(--sand-soft); color: var(--sand-ink); display: grid; place-items: center; flex: none; }
   .row .pin.cat { background: var(--blue-soft); color: var(--blue-ink); }
+  .row .pin.spot { background: var(--green-soft); color: var(--green); }
+  .info-box { background: var(--warn-soft); color: var(--warn-ink); border-radius: 14px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; margin: 0 0 12px; }
+  .crumb { font-size: 13px; color: var(--muted); margin: -6px 0 10px; }
+  .kv .muted { color: var(--muted); font-style: italic; }
   .row .pin svg { width: 18px; height: 18px; }
   .row .txt { flex: 1; min-width: 0; }
   .row .txt strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -182,8 +186,8 @@
   .combo-btn { position: absolute; top: 1px; right: 1px; bottom: 1px; width: 48px; display: grid; place-items: center; color: var(--green); background: var(--green-soft); border-radius: 0 11px 11px 0; pointer-events: none; }
   .combo-btn svg { width: 18px; height: 18px; }
   .field .combo-pick { position: absolute; top: 0; right: 0; width: 50px; height: 100%; min-height: 0; padding: 0; border: 0; opacity: 0; font-size: 16px; cursor: pointer; }
-  .combo.empty .combo-btn, .combo.empty .combo-pick { display: none; }
-  .field .combo.empty input { padding-right: 14px; }
+  .combo.no-opts .combo-btn, .combo.no-opts .combo-pick { display: none; }
+  .field .combo.no-opts input { padding-right: 14px; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
   .photo-box { display: flex; gap: 12px; align-items: center; border: 1.5px dashed var(--line); border-radius: 16px; padding: 12px; margin-bottom: 16px; }
@@ -290,13 +294,22 @@
       <input id="fName" autocomplete="off" placeholder="Contoh: Tas kerja hitam" maxlength="120">
     </div>
     <div class="field">
-      <label for="fLoc">Lokasi penyimpanan <span class="req">*</span></label>
+      <label for="fLoc">Lokasi <span class="req">*</span></label>
       <div class="combo">
-        <input id="fLoc" autocomplete="off" placeholder="Contoh: Kamar, lemari, rak atas" maxlength="120">
+        <input id="fLoc" autocomplete="off" placeholder="Contoh: Kamar, Ruang tamu, Dapur" maxlength="80">
         <span class="combo-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
         <select id="locPick" class="combo-pick" aria-label="Pilih lokasi yang sudah ada"></select>
       </div>
       <div class="hint" id="locHint"></div>
+    </div>
+    <div class="field">
+      <label for="fSpot">Titik lokasi <span class="opt">(opsional)</span></label>
+      <div class="combo">
+        <input id="fSpot" autocomplete="off" placeholder="Contoh: Lemari atas, Laci meja" maxlength="120">
+        <span class="combo-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        <select id="spotPick" class="combo-pick" aria-label="Pilih titik lokasi yang sudah ada"></select>
+      </div>
+      <div class="hint" id="spotHint"></div>
     </div>
     <div class="field">
       <label for="fCat">Kategori <span class="opt">(opsional)</span></label>
@@ -333,6 +346,14 @@
   <form class="sheet" id="manageForm" novalidate>
     <h3 id="manageTitle">Ganti nama</h3>
     <p class="sub" id="manageInfo" style="margin:-6px 0 14px"></p>
+    <div class="field hidden" id="mRoomField">
+      <label for="mRoom">Lokasi</label>
+      <div class="combo">
+        <input id="mRoom" autocomplete="off" maxlength="80" placeholder="Contoh: Kamar, Ruang tamu">
+        <span class="combo-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        <select id="mRoomPick" class="combo-pick" aria-label="Pilih lokasi yang sudah ada"></select>
+      </div>
+    </div>
     <div class="field">
       <label for="mName" id="mLabel">Nama baru</label>
       <div class="combo">
@@ -417,7 +438,7 @@
   /* ===================== KONFIGURASI ===================== */
   // Client ID sebaiknya diisi di file config.js. Baris di bawah hanya cadangan.
   const DEFAULT_CLIENT_ID = '';
-  const APP_VERSION = '1.9.0';
+  const APP_VERSION = '2.0.0';
   const BACKUP_FILENAME = 'rumahku-backup.json';
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const PHOTO_MAX_SIDE = 1000;     // px, sisi terpanjang foto
@@ -433,6 +454,7 @@
     photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>',
     back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
     chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+    room: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>',
     close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
     grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
@@ -516,21 +538,26 @@
     items.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   }
 
-  // Mengelompokkan barang berdasarkan lokasi atau kategori (huruf besar/kecil & spasi dianggap sama)
-  function groupBy(field) {
+  // Mengelompokkan barang (huruf besar/kecil & spasi dianggap sama).
+  // Yang kosong dikumpulkan dalam satu kelompok ("Belum ada lokasi", "Tanpa titik lokasi", "Tanpa kategori"), selalu paling bawah.
+  const NO_ROOM = 'Belum ada lokasi';
+  const NO_SPOT = 'Tanpa titik lokasi';
+  function groupList(list, field, emptyLabel) {
     const map = new Map();
-    for (const it of items) {
+    for (const it of list) {
       const raw = String(it[field] || '').trim();
       const key = norm(raw);
-      if (!key && field === 'location') continue;
-      if (!map.has(key)) map.set(key, { key, label: raw || UNCATEGORIZED, items: [] });
+      if (!map.has(key)) map.set(key, { key, label: raw || emptyLabel, items: [] });
       map.get(key).items.push(it);
     }
-    // urut abjad, "Tanpa kategori" selalu paling bawah
     return [...map.values()].sort((a, b) => (a.key === '') - (b.key === '') || a.label.localeCompare(b.label, 'id'));
   }
-  const locationGroups = () => groupBy('location');
-  const categoryGroups = () => groupBy('category');
+  // Lokasi = ruangan (Kamar, Ruang tamu, ...). Titik lokasi = tempat spesifik di dalamnya (Lemari atas, ...).
+  const locationGroups = () => groupList(items, 'location', NO_ROOM);
+  const roomItems = (roomKey) => items.filter((it) => norm(it.location) === roomKey);
+  const spotGroups = (roomKey) => groupList(roomItems(roomKey), 'spot', NO_SPOT);
+  const categoryGroups = () => groupList(items, 'category', UNCATEGORIZED);
+  const whereText = (it) => [it.location, it.spot].map((x) => String(x || '').trim()).filter(Boolean).join(' · ') || NO_ROOM;
 
   /* ===================== RENDER ===================== */
   const getLayout = () => (store.get('layout', 'grid') === 'list' ? 'list' : 'grid');
@@ -553,14 +580,14 @@
       <div class="thumb">${photoHTML(it.photo)}</div>
       <div class="card-body">
         <p class="card-title">${esc(it.name)}</p>
-        <div class="meta">${ICON.pin}<span>${esc(it.location)}</span></div>
+        <div class="meta">${ICON.pin}<span>${esc(whereText(it))}</span></div>
         ${whyHTML(it)}
       </div>
     </button>`;
   }
 
   function rowItemHTML(it) {
-    const meta = [it.location, it.category].filter((x) => x && x.trim()).map(esc).join(' · ');
+    const meta = [whereText(it), it.category].filter((x) => x && x.trim()).map(esc).join(' · ');
     return `<button class="irow" data-open="${esc(it.id)}">
       <div class="ithumb">${photoHTML(it.photo)}</div>
       <div class="txt">
@@ -588,16 +615,25 @@
   }
 
   function groupListHTML(groups, kind) {
-    const isCat = kind === 'category';
+    const K = {
+      category: { attr: 'data-cat', icon: ICON.tag, cls: 'cat' },
+      location: { attr: 'data-loc', icon: ICON.room, cls: '' },
+      spot: { attr: 'data-spot', icon: ICON.pin, cls: 'spot' }
+    }[kind];
+    const sub = (g) => {
+      if (kind !== 'location') return `${g.items.length} barang`;
+      const n = groupList(g.items, 'spot', NO_SPOT).filter((x) => x.key).length;
+      return n ? `${n} titik · ${g.items.length} barang` : `${g.items.length} barang`;
+    };
     return `<div class="list">${groups.map((g) => `
-      <button class="row ${isCat && !g.key ? 'quiet' : ''}" ${isCat ? 'data-cat' : 'data-loc'}="${esc(g.key)}">
-        <div class="pin ${isCat ? 'cat' : ''}">${isCat ? ICON.tag : ICON.pin}</div>
-        <div class="txt"><strong>${esc(g.label)}</strong><span>${g.items.length} barang</span></div>
+      <button class="row ${!g.key ? 'quiet' : ''}" ${K.attr}="${esc(g.key)}">
+        <div class="pin ${K.cls}">${K.icon}</div>
+        <div class="txt"><strong>${esc(g.label)}</strong><span>${sub(g)}</span></div>
         ${ICON.chev}
       </button>`).join('')}</div>`;
   }
 
-  const backHTML = (to, label) => `<button class="back-btn" data-go="${to}">${ICON.back}${esc(label)}</button>`;
+  const backHTML = (to, label, key) => `<button class="back-btn" data-go="${to}" ${key != null ? `data-key="${esc(key)}"` : ''}>${ICON.back}${esc(label)}</button>`;
   const emptyHTML = (title, text) => `<div class="empty">${ICON.box}<strong>${esc(title)}</strong>${esc(text)}</div>`;
 
   // Pecah teks menjadi kata-kata (huruf/angka), huruf kecil semua
@@ -618,7 +654,7 @@
     const last = qs.length - 1;
     const exact = [], partial = [];
     for (const it of items) {
-      const fields = [[it.name, 4, 'nama'], [it.category, 3, 'kategori'], [it.location, 2, 'lokasi'], [it.notes, 1, 'catatan']]
+      const fields = [[it.name, 4, 'nama'], [it.category, 3, 'kategori'], [it.location, 2, 'lokasi'], [it.spot, 2, 'titik lokasi'], [it.notes, 1, 'catatan']]
         .map(([t, w, l]) => [wordsOf(t), w, l]);
       let sExact = 0, sPartial = 0;
       const wExact = [], wPartial = [];
@@ -666,9 +702,35 @@
 
     else if (view.name === 'locations') {
       const groups = locationGroups();
+      const named = groups.filter((g) => g.key).length;
+      const unset = groups.find((g) => !g.key);
       v.innerHTML = backHTML('home', 'Kembali')
-        + headHTML('Lokasi', `${groups.length} tempat`, false)
+        + headHTML('Lokasi', `${named} lokasi`, false)
+        + (unset ? `<div class="info-box">${unset.items.length} barang belum punya lokasi (ruangan). Buka "${NO_ROOM}", pilih titiknya, lalu ketuk "Ubah lokasi & titik" untuk mengatur semuanya sekaligus.</div>` : '')
         + (groups.length ? groupListHTML(groups, 'location') : emptyHTML('Belum ada lokasi', 'Lokasi muncul otomatis saat kamu menambah barang.'));
+    }
+
+    // Isi satu lokasi (ruangan): daftar titik lokasinya
+    else if (view.name === 'location') {
+      const g = locationGroups().find((x) => x.key === view.key);
+      if (!g) { go('locations'); return; }
+      const spots = spotGroups(g.key);
+      v.innerHTML = backHTML('locations', 'Semua lokasi')
+        + headHTML(g.label, `${g.items.length} barang`, false)
+        + groupActionsHTML('location', g)
+        + groupListHTML(spots, 'spot');
+    }
+
+    // Isi satu titik lokasi: daftar barangnya
+    else if (view.name === 'spot') {
+      const room = locationGroups().find((x) => x.key === view.key);
+      const g = room && spotGroups(room.key).find((x) => x.key === view.spot);
+      if (!g) { room ? go('location', { key: room.key }) : go('locations'); return; }
+      v.innerHTML = backHTML('location', room.label, room.key)
+        + headHTML(g.label, `${g.items.length} barang`, true)
+        + `<p class="crumb">${esc(room.label)} › ${esc(g.label)}</p>`
+        + groupActionsHTML('spot', g)
+        + itemsHTML(byName(g.items));
     }
 
     else if (view.name === 'categories') {
@@ -679,23 +741,25 @@
         + (groups.length ? groupListHTML(groups, 'category') : emptyHTML('Belum ada kategori', 'Isi kolom Kategori saat menambah barang, misalnya Tas, Dokumen, atau Elektronik.'));
     }
 
-    else if (view.name === 'location' || view.name === 'category') {
-      const isLoc = view.name === 'location';
-      const g = (isLoc ? locationGroups() : categoryGroups()).find((x) => x.key === view.key);
-      if (!g) { go(isLoc ? 'locations' : 'categories'); return; }
-      v.innerHTML = backHTML(isLoc ? 'locations' : 'categories', isLoc ? 'Semua lokasi' : 'Semua kategori')
+    else if (view.name === 'category') {
+      const g = categoryGroups().find((x) => x.key === view.key);
+      if (!g) { go('categories'); return; }
+      v.innerHTML = backHTML('categories', 'Semua kategori')
         + headHTML(g.label, `${g.items.length} barang`, true)
-        + groupActionsHTML(isLoc, g)
+        + groupActionsHTML('category', g)
         + itemsHTML(byName(g.items));
     }
   }
 
   const PENCIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>';
-  function groupActionsHTML(isLoc, g) {
-    if (!isLoc && !g.key) return ''; // "Tanpa kategori" tidak bisa diganti nama/dihapus
+  function groupActionsHTML(kind, g) {
+    if (kind === 'category' && !g.key) return ''; // "Tanpa kategori" tidak bisa diganti nama/dihapus
+    const label = kind === 'spot' ? 'Ubah lokasi & titik'
+      : kind === 'location' ? (g.key ? 'Ganti nama / pindahkan' : 'Pindahkan semua ke satu lokasi')
+      : 'Ganti nama / gabung';
     return `<div class="group-actions">
-      <button class="btn small" data-manage="rename">${PENCIL}${isLoc ? 'Ganti nama / pindahkan' : 'Ganti nama / gabung'}</button>
-      ${isLoc ? '' : '<button class="btn small danger" data-manage="delete">Hapus kategori</button>'}
+      <button class="btn small" data-manage="rename">${PENCIL}${label}</button>
+      ${kind === 'category' ? '<button class="btn small danger" data-manage="delete">Hapus kategori</button>' : ''}
     </div>`;
   }
 
@@ -704,12 +768,12 @@
     const list = filterItems(view.query);
     const searching = !!norm(view.query);
     const shown = searching ? list : list.slice(0, 12);
-    const locCount = locationGroups().length;
+    const locCount = locationGroups().filter((g) => g.key).length;
     const catCount = categoryGroups().filter((g) => g.key).length;
     $('homeBody').innerHTML = `
       <div class="tiles ${searching ? 'hidden' : ''}">
         <button class="tile green" data-go="all">${ICON.box}<div><strong>Semua barang</strong><span>${items.length} barang</span></div></button>
-        <button class="tile sand" data-go="locations">${ICON.pin}<div><strong>Lokasi</strong><span>${locCount} tempat</span></div></button>
+        <button class="tile sand" data-go="locations">${ICON.pin}<div><strong>Lokasi</strong><span>${locCount} lokasi</span></div></button>
         <button class="tile blue" data-go="categories">${ICON.tag}<div><strong>Kategori</strong><span>${catCount} kategori</span></div></button>
       </div>
       ${searching ? headHTML('Hasil pencarian', `${list.length} ditemukan`, list.length > 0) : headHTML('Barang terbaru', '', shown.length > 0)}
@@ -726,15 +790,16 @@
   }
 
   $('view').addEventListener('click', (e) => {
-    const t = e.target.closest('[data-go],[data-open],[data-loc],[data-cat],[data-layout],[data-manage]');
+    const t = e.target.closest('[data-go],[data-open],[data-loc],[data-spot],[data-cat],[data-layout],[data-manage]');
     if (!t) return;
     if (t.dataset.layout) {
       store.set('layout', t.dataset.layout);
       if (view.name === 'home') renderHomeBody(); else render();
     }
-    else if (t.dataset.go) go(t.dataset.go);
+    else if (t.dataset.go) go(t.dataset.go, t.hasAttribute('data-key') ? { key: t.dataset.key } : {});
     else if (t.dataset.open) openDetail(t.dataset.open);
     else if (t.hasAttribute('data-loc')) go('location', { key: t.dataset.loc });
+    else if (t.hasAttribute('data-spot')) go('spot', { key: view.key, spot: t.dataset.spot });
     else if (t.hasAttribute('data-cat')) go('category', { key: t.dataset.cat });
     else if (t.dataset.manage === 'rename') openManage();
     else if (t.dataset.manage === 'delete') deleteCategory();
@@ -752,18 +817,22 @@
   }
 
   function openManage() {
+    if (view.name === 'spot') { openSpotManage(); return; }
     const c = currentGroup();
     if (!c) return;
     const { isLoc, g } = c;
-    manageCtx = { isLoc, key: g.key, label: g.label };
+    manageCtx = { mode: isLoc ? 'room' : 'category', isLoc, key: g.key, label: g.key ? g.label : '' };
     const word = isLoc ? 'lokasi' : 'kategori';
-    $('manageTitle').textContent = isLoc ? 'Ganti nama atau pindahkan lokasi' : 'Ganti nama atau gabung kategori';
-    $('manageInfo').textContent = `${g.items.length} barang di "${g.label}" akan ikut berubah sekaligus.`;
-    $('mLabel').textContent = `Nama ${word} baru`;
-    $('mName').value = g.label;
+    $('mRoomField').classList.add('hidden');
+    $('manageTitle').textContent = isLoc ? (g.key ? 'Ganti nama atau pindahkan lokasi' : 'Pindahkan ke satu lokasi') : 'Ganti nama atau gabung kategori';
+    $('manageInfo').textContent = g.key
+      ? `${g.items.length} barang di "${g.label}" akan ikut berubah sekaligus.`
+      : `${g.items.length} barang yang belum punya lokasi akan dipindahkan semua ke lokasi yang kamu isi.`;
+    $('mLabel').textContent = g.key ? `Nama ${word} baru` : 'Lokasi';
+    $('mName').value = g.key ? g.label : '';
     const others = (isLoc ? locationGroups() : categoryGroups()).filter((x) => x.key && x.key !== g.key)
       .map((x) => x.label).sort((a, b) => a.localeCompare(b, 'id'));
-    $('mPick').closest('.combo').classList.toggle('empty', !others.length);
+    $('mPick').closest('.combo').classList.toggle('no-opts', !others.length);
     $('mPick').innerHTML = `<option value="" disabled selected>Pilih ${word} yang sudah ada</option>`
       + others.map((l) => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
     $('mHint').textContent = others.length
@@ -775,9 +844,75 @@
   $('mPick').addEventListener('change', () => { if ($('mPick').value) $('mName').value = $('mPick').value; });
   $('mCancel').onclick = () => closeOverlay('manageOverlay');
 
+  // Kelola satu titik lokasi: ubah lokasi (ruangan) dan/atau nama titiknya, untuk semua barang di titik itu
+  function fillRoomPick() {
+    const rooms = locationGroups().filter((x) => x.key).map((x) => x.label);
+    $('mRoomPick').closest('.combo').classList.toggle('no-opts', !rooms.length);
+    $('mRoomPick').innerHTML = '<option value="" disabled selected>Pilih lokasi yang sudah ada</option>'
+      + rooms.map((l) => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  }
+  function fillSpotPickFor(roomText) {
+    const rk = norm(roomText);
+    const src = rk && items.some((it) => norm(it.location) === rk) ? roomItems(rk) : items;
+    const spots = groupList(src, 'spot', NO_SPOT).filter((x) => x.key).map((x) => x.label);
+    $('mPick').closest('.combo').classList.toggle('no-opts', !spots.length);
+    $('mPick').innerHTML = '<option value="" disabled selected>Pilih titik yang sudah ada</option>'
+      + spots.map((l) => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  }
+  function openSpotManage() {
+    const room = locationGroups().find((x) => x.key === view.key);
+    const g = room && spotGroups(room.key).find((x) => x.key === view.spot);
+    if (!g) return;
+    manageCtx = { mode: 'spot', roomKey: room.key, roomLabel: room.key ? room.label : '', spotKey: g.key, spotLabel: g.key ? g.label : '' };
+    $('manageTitle').textContent = 'Ubah lokasi & titik lokasi';
+    $('manageInfo').textContent = `${g.items.length} barang di titik ini akan ikut berubah sekaligus.`;
+    $('mRoomField').classList.remove('hidden');
+    $('mRoom').value = manageCtx.roomLabel;
+    fillRoomPick();
+    $('mLabel').textContent = 'Titik lokasi';
+    $('mName').value = manageCtx.spotLabel;
+    fillSpotPickFor(manageCtx.roomLabel);
+    $('mHint').textContent = 'Ketuk ▾ untuk memilih yang sudah ada, atau ketik baru. Titik lokasi boleh dikosongkan.';
+    openOverlay('manageOverlay');
+  }
+  $('mRoomPick').addEventListener('change', () => { if ($('mRoomPick').value) { $('mRoom').value = $('mRoomPick').value; fillSpotPickFor($('mRoom').value); } });
+  $('mRoom').addEventListener('input', () => fillSpotPickFor($('mRoom').value));
+
+  async function saveSpotManage() {
+    const ctx = manageCtx;
+    const clean = (x) => x.trim().replace(/\s+/g, ' ');
+    const roomIn = clean($('mRoom').value), spotIn = clean($('mName').value);
+    const rk = norm(roomIn), sk = norm(spotIn);
+    if (roomIn === ctx.roomLabel && spotIn === ctx.spotLabel) { closeOverlay('manageOverlay'); return; }
+    // Pakai penulisan yang sudah ada supaya tidak muncul lokasi/titik kembar
+    const roomFinal = !rk ? '' : rk === ctx.roomKey ? ctx.roomLabel : (locationGroups().find((x) => x.key === rk)?.label || roomIn);
+    const sameGroup = rk === ctx.roomKey && sk === ctx.spotKey;
+    const existingSpot = sk ? spotGroups(rk).find((x) => x.key === sk) : null;
+    const spotFinal = !sk ? '' : sameGroup ? spotIn : (existingSpot?.label || spotIn);
+    const affected = items.filter((it) => norm(it.location) === ctx.roomKey && norm(it.spot) === ctx.spotKey);
+    const target = !sameGroup && spotGroups(rk).find((x) => x.key === sk);
+    if (target && !confirm(`"${roomFinal || NO_ROOM} › ${spotFinal || NO_SPOT}" sudah berisi ${target.items.length} barang.\n\n${affected.length} barang dari titik ini akan digabung ke sana. Lanjutkan?`)) return;
+    const now = Date.now();
+    try {
+      await DB.putMany(affected.map((it) => ({ ...it, location: roomFinal, spot: spotFinal, updatedAt: now })));
+    } catch (err) {
+      console.error(err);
+      toast('Gagal menyimpan perubahan');
+      return;
+    }
+    await loadItems();
+    closeOverlay('manageOverlay');
+    manageCtx = null;
+    view = { name: 'spot', query: '', key: rk, spot: sk };
+    render();
+    toast(`${affected.length} barang dipindahkan ke ${roomFinal || NO_ROOM} › ${spotFinal || NO_SPOT}`);
+    dataChanged();
+  }
+
   $('manageForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!manageCtx) return;
+    if (manageCtx.mode === 'spot') { await saveSpotManage(); return; }
     const { isLoc, key, label } = manageCtx;
     const field = isLoc ? 'location' : 'category';
     const word = isLoc ? 'lokasi' : 'kategori';
@@ -835,7 +970,8 @@
     const it = items.find((x) => x.id === id);
     if (!it) return;
     const rows = [
-      ['Lokasi', esc(it.location)],
+      ['Lokasi', it.location ? esc(it.location) : '<span class="muted">Belum diisi</span>'],
+      it.spot && ['Titik lokasi', esc(it.spot)],
       it.category && ['Kategori', esc(it.category)],
       it.notes && ['Catatan', esc(it.notes)],
       it.price && ['Harga beli', esc(rupiah(it.price))],
@@ -888,7 +1024,16 @@
     location: { input: 'fLoc', sel: 'locPick', hint: 'locHint', groups: () => locationGroups(),
       title: 'Pilih lokasi yang sudah ada',
       hintOn: 'Ketuk ▾ untuk pilih lokasi yang sudah ada, atau ketik baru.',
-      hintOff: 'Tulis dengan pola yang sama, misalnya "Kamar, lemari atas".' },
+      hintOff: 'Ruangannya, misalnya "Kamar", "Ruang tamu", atau "Dapur".' },
+    // Titik lokasi: yang ditawarkan adalah titik di lokasi (ruangan) yang sedang diisi
+    spot: { input: 'fSpot', sel: 'spotPick', hint: 'spotHint',
+      groups: () => {
+        const rk = norm($('fLoc').value);
+        return groupList(rk && items.some((it) => norm(it.location) === rk) ? roomItems(rk) : items, 'spot', NO_SPOT);
+      },
+      title: 'Pilih titik lokasi yang sudah ada',
+      hintOn: 'Ketuk ▾ untuk pilih titik yang sudah ada, atau ketik baru.',
+      hintOff: 'Tempat spesifiknya, misalnya "Lemari atas" atau "Laci meja".' },
     category: { input: 'fCat', sel: 'catPick', hint: 'catHint', groups: () => categoryGroups(),
       title: 'Pilih kategori yang sudah ada',
       hintOn: 'Ketuk ▾ untuk pilih kategori yang ada, atau ketik baru.',
@@ -898,7 +1043,7 @@
   function renderPick(kind) {
     const cfg = PICK[kind];
     const labels = cfg.groups().filter((g) => g.key).map((g) => g.label).sort((a, b) => a.localeCompare(b, 'id'));
-    $(cfg.sel).closest('.combo').classList.toggle('empty', !labels.length);
+    $(cfg.sel).closest('.combo').classList.toggle('no-opts', !labels.length);
     $(cfg.sel).innerHTML = `<option value="" disabled>${esc(cfg.title)}</option>`
       + labels.map((l) => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
     $(cfg.hint).textContent = labels.length ? cfg.hintOn : cfg.hintOff;
@@ -917,22 +1062,28 @@
     $(cfg.sel).addEventListener('change', () => { if ($(cfg.sel).value) $(cfg.input).value = $(cfg.sel).value; });
     $(cfg.input).addEventListener('input', () => syncPick(kind));
   });
+  // Ganti lokasi -> daftar titik lokasi ikut menyesuaikan
+  $('fLoc').addEventListener('input', () => renderPick('spot'));
+  $('locPick').addEventListener('change', () => renderPick('spot'));
 
   function openForm(it = null) {
     editingId = it ? it.id : null;
     // Kalau menambah dari halaman lokasi/kategori, kolomnya langsung terisi
-    let presetLoc = '', presetCat = '';
-    if (!it && view.name === 'location') presetLoc = locationGroups().find((g) => g.key === view.key)?.label || '';
+    let presetLoc = '', presetSpot = '', presetCat = '';
+    if (!it && (view.name === 'location' || view.name === 'spot') && view.key) presetLoc = locationGroups().find((g) => g.key === view.key)?.label || '';
+    if (!it && view.name === 'spot' && view.spot) presetSpot = spotGroups(view.key).find((g) => g.key === view.spot)?.label || '';
     if (!it && view.name === 'category' && view.key) presetCat = categoryGroups().find((g) => g.key === view.key)?.label || '';
     $('formTitle').textContent = it ? 'Ubah barang' : 'Tambah barang';
     $('fName').value = it?.name || '';
     $('fLoc').value = it?.location || presetLoc;
+    $('fSpot').value = it?.spot || presetSpot;
     $('fCat').value = it?.category || presetCat;
     $('fPrice').value = it?.price ? Number(it.price).toLocaleString('id-ID') : '';
     $('fBuy').value = it?.buyDate || '';
     $('fNotes').value = it?.notes || '';
     setPhotoPreview(it?.photo || null);
     renderPick('location');
+    renderPick('spot');
     renderPick('category');
     openOverlay('formOverlay');
   }
@@ -988,7 +1139,7 @@
     const name = $('fName').value.trim();
     const location = $('fLoc').value.trim();
     if (!name) { toast('Nama barang wajib diisi'); $('fName').focus(); return; }
-    if (!location) { toast('Lokasi penyimpanan wajib diisi'); $('fLoc').focus(); return; }
+    if (!location) { toast('Lokasi wajib diisi, misalnya Kamar atau Ruang tamu'); $('fLoc').focus(); return; }
     const old = editingId ? items.find((x) => x.id === editingId) : null;
     const priceDigits = $('fPrice').value.replace(/\D/g, '');
     const now = Date.now();
@@ -996,6 +1147,7 @@
       id: old ? old.id : uid(),
       name,
       location,
+      spot: $('fSpot').value.trim(),
       category: $('fCat').value.trim(),
       price: priceDigits ? Number(priceDigits) : null,
       buyDate: $('fBuy').value || '',
@@ -1021,16 +1173,18 @@
 
   /* ===================== BACKUP DATA ===================== */
   function backupPayload() {
-    return JSON.stringify({ app: 'rumahku', version: 1, exportedAt: new Date().toISOString(), items });
+    return JSON.stringify({ app: 'rumahku', version: 2, exportedAt: new Date().toISOString(), items });
   }
 
   function parseBackup(text) {
     const data = JSON.parse(text);
     if (!data || data.app !== 'rumahku' || !Array.isArray(data.items)) throw new Error('Bukan file backup Homeventory');
+    // Backup lama (sebelum v2.0) belum punya "titik lokasi": isian lokasinya dipindah ke titik lokasi
     return data.items.filter((it) => it && it.id && it.name).map((it) => ({
       id: String(it.id),
       name: String(it.name),
-      location: String(it.location || ''),
+      location: 'spot' in it ? String(it.location || '') : '',
+      spot: 'spot' in it ? String(it.spot || '') : String(it.location || ''),
       category: String(it.category || ''),
       price: it.price ? Number(it.price) : null,
       buyDate: String(it.buyDate || ''),
@@ -1369,9 +1523,20 @@
   $('btnRestore').onclick = () => restoreFromDrive();
 
   /* ===================== MULAI ===================== */
+  // Sekali saja: isian lokasi lama dipindah ke "Titik lokasi", kolom Lokasi (ruangan) dikosongkan untuk diisi ulang
+  async function migrateSpots() {
+    const old = items.filter((it) => !('spot' in it));
+    if (!old.length) return;
+    await DB.putMany(old.map((it) => ({ ...it, spot: String(it.location || ''), location: '' })));
+    await loadItems();
+    setTimeout(() => toast(`Lokasi lama ${old.length} barang dipindah ke "Titik lokasi". Atur lokasinya lewat menu Lokasi.`, 6000), 400);
+    dataChanged();
+  }
+
   async function init() {
     try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch {}
     await loadItems();
+    await migrateSpots();
     render();
     setPending(store.get('pending'));
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {

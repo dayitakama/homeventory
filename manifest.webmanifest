@@ -1,6 +1,6 @@
 {
-  "name": "Rumahku - Inventaris Rumah",
-  "short_name": "Rumahku",
+  "name": "Homeventory - Inventaris Rumah",
+  "short_name": "Homeventory",
   "description": "Catat barang di rumah dan lokasi penyimpanannya.",
   "lang": "id",
   "start_url": "./",

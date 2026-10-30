@@ -69,12 +69,16 @@
 
   /* Search */
   .search { position: relative; margin-bottom: 14px; }
-  .search svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--muted); }
+  .search > svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--muted); }
   .search input {
     width: 100%; height: 50px; border-radius: 14px; border: 1px solid transparent; background: var(--card);
-    padding: 0 14px 0 42px; box-shadow: var(--shadow); outline: none; font-size: 16px;
+    padding: 0 48px 0 42px; box-shadow: var(--shadow); outline: none; font-size: 16px;
   }
   .search input:focus { border-color: var(--green); }
+  .search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+  .search-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border: 0; border-radius: 50%; background: #ebe8e1; color: var(--muted); display: grid; place-items: center; }
+  .search-clear svg { width: 16px; height: 16px; }
+  .why { display: block; font-size: 11.5px; color: var(--muted); font-style: italic; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* Tiles */
   .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 22px; }
@@ -413,7 +417,7 @@
   /* ===================== KONFIGURASI ===================== */
   // Client ID sebaiknya diisi di file config.js. Baris di bawah hanya cadangan.
   const DEFAULT_CLIENT_ID = '';
-  const APP_VERSION = '1.8.2';
+  const APP_VERSION = '1.9.0';
   const BACKUP_FILENAME = 'rumahku-backup.json';
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const PHOTO_MAX_SIDE = 1000;     // px, sisi terpanjang foto
@@ -429,6 +433,7 @@
     photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>',
     back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
     chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
     grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
     list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="5" width="4" height="4" rx="1"/><rect x="4" y="15" width="4" height="4" rx="1"/><path d="M11 7h9M11 17h9"/></svg>'
@@ -536,12 +541,20 @@
     ? `<img class="ph-bg" src="${src}" alt="" aria-hidden="true"><img class="ph" src="${src}" alt="${esc(alt)}" loading="lazy">`
     : ICON.photo);
 
+  // Keterangan kecil "cocok di catatan" dsb. di hasil pencarian (diisi oleh filterItems)
+  let searchWhy = null;
+  const whyHTML = (it) => {
+    const w = searchWhy && searchWhy.get(it.id);
+    return w && w.length ? `<span class="why">cocok di ${w.join(' & ')}</span>` : '';
+  };
+
   function cardHTML(it) {
     return `<button class="card" data-open="${esc(it.id)}">
       <div class="thumb">${photoHTML(it.photo)}</div>
       <div class="card-body">
         <p class="card-title">${esc(it.name)}</p>
         <div class="meta">${ICON.pin}<span>${esc(it.location)}</span></div>
+        ${whyHTML(it)}
       </div>
     </button>`;
   }
@@ -553,6 +566,7 @@
       <div class="txt">
         <p class="card-title">${esc(it.name)}</p>
         <div class="meta">${ICON.pin}<span>${meta}</span></div>
+        ${whyHTML(it)}
       </div>
       ${ICON.chev}
     </button>`;
@@ -586,26 +600,60 @@
   const backHTML = (to, label) => `<button class="back-btn" data-go="${to}">${ICON.back}${esc(label)}</button>`;
   const emptyHTML = (title, text) => `<div class="empty">${ICON.box}<strong>${esc(title)}</strong>${esc(text)}</div>`;
 
+  // Pecah teks menjadi kata-kata (huruf/angka), huruf kecil semua
+  const wordsOf = (t) => norm(t).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+
+  // Pencarian berbasis KATA (bukan potongan huruf):
+  // - "tas" menemukan "Tas kerja", kategori "Tas", atau catatan "...di tas ransel",
+  //   tapi TIDAK menemukan "lemari atas", "batas", atau "kualitas".
+  // - Kalau ada barang yang semua katanya persis cocok, hanya itu yang tampil
+  //   (jadi "tas" tidak memunculkan "tasbih").
+  // - Kalau belum ada yang persis cocok (kata terakhir masih diketik, misalnya "ta" atau "tasb"),
+  //   kata terakhir boleh cocok di awal kata.
+  // - Urutan hasil: cocok di nama dulu, lalu kategori, lokasi, kemudian catatan.
   function filterItems(q) {
-    const n = norm(q);
-    if (!n) return items;
-    const words = n.split(' ');
-    return items.filter((it) => {
-      const hay = norm([it.name, it.location, it.category, it.notes].join(' '));
-      return words.every((w) => hay.includes(w));
-    });
+    searchWhy = null;
+    const qs = wordsOf(q);
+    if (!qs.length) return items;
+    const last = qs.length - 1;
+    const exact = [], partial = [];
+    for (const it of items) {
+      const fields = [[it.name, 4, 'nama'], [it.category, 3, 'kategori'], [it.location, 2, 'lokasi'], [it.notes, 1, 'catatan']]
+        .map(([t, w, l]) => [wordsOf(t), w, l]);
+      let sExact = 0, sPartial = 0;
+      const wExact = [], wPartial = [];
+      qs.forEach((qw, i) => {
+        let be = 0, bp = 0, le = '', lp = '';
+        for (const [ws, w, l] of fields) {
+          if (ws.includes(qw)) { if (w > be) { be = w; le = l; } if (w > bp) { bp = w; lp = l; } }
+          else if (i === last && ws.some((x) => x.startsWith(qw)) && w > bp) { bp = w; lp = l; }
+        }
+        sExact = sExact >= 0 && be ? sExact + be : -1;
+        sPartial = sPartial >= 0 && bp ? sPartial + bp : -1;
+        wExact.push(le); wPartial.push(lp);
+      });
+      if (sExact > 0) exact.push([sExact, it, wExact]);
+      if (sPartial > 0) partial.push([sPartial, it, wPartial]);
+    }
+    const hits = exact.length ? exact : partial;
+    // Catat di bagian mana kata itu ditemukan (selain nama), untuk keterangan kecil di hasil pencarian
+    searchWhy = new Map(hits.map(([, it, ls]) => [it.id, [...new Set(ls)].filter((l) => l && l !== 'nama')]));
+    return hits.sort((a, b) => b[0] - a[0] || a[1].name.localeCompare(b[1].name, 'id')).map((h) => h[1]);
   }
 
   function render() {
     const v = $('view');
+    searchWhy = null; // keterangan pencarian hanya untuk hasil pencarian di beranda
 
     if (view.name === 'home') {
       v.innerHTML = `
-        <div class="search">${ICON.search}<input id="q" type="search" placeholder="Cari nama barang, lokasi, kategori..." value="${esc(view.query)}" autocomplete="off" enterkeyhint="search"></div>
+        <div class="search">${ICON.search}<input id="q" type="search" placeholder="Cari nama barang, lokasi, kategori..." value="${esc(view.query)}" autocomplete="off" enterkeyhint="search"><button type="button" class="search-clear ${view.query ? '' : 'hidden'}" id="qClear" aria-label="Hapus pencarian">${ICON.close}</button></div>
         <div id="homeBody"></div>
       `;
       const q = $('q');
-      q.addEventListener('input', () => { view.query = q.value; renderHomeBody(); });
+      q.addEventListener('input', () => { view.query = q.value; $('qClear').classList.toggle('hidden', !q.value); renderHomeBody(); });
+      // Tombol x: hapus semua isi pencarian sekaligus, lalu siap mengetik lagi
+      $('qClear').addEventListener('click', () => { q.value = ''; view.query = ''; $('qClear').classList.add('hidden'); renderHomeBody(); q.focus(); });
       q.addEventListener('keydown', (e) => { if (e.key === 'Enter') q.blur(); });
       renderHomeBody();
     }
